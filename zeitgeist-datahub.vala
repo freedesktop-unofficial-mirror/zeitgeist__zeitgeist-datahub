@@ -23,12 +23,12 @@
 using Zeitgeist;
 
 [DBus (name = "org.gnome.zeitgeist.datahub")]
-interface DataHubService : Object
+public interface DataHubService : Object
 {
   public abstract string[] get_data_providers () throws DBus.Error;
 }
 
-class DataHub : Object, DataHubService
+public class DataHub : Object, DataHubService
 {
   private Zeitgeist.Log zg_log;
   private Zeitgeist.DataSourceRegistry registry;
