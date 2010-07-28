@@ -141,29 +141,39 @@ public class DataHub : Object, DataHubService
   {
     debug ("Inserting %u events", queued_events.length ());
 
-    PtrArray ptr_arr = new PtrArray.with_free_func (Object.unref);
-    // careful here, the ptr array does ref_sink on the events
-    // inside Log.insert_events
-    foreach (unowned Event e in queued_events)
+    batch_insert_events ();
+
+    queued_events = new List<Event> ();
+  }
+
+  protected async void batch_insert_events ()
+  {
+    // copy the events to GenericArray (with a ref on them)
+    GenericArray<Event> all_events = new GenericArray<Event> ();
+    foreach (var e in queued_events)
     {
-      ptr_arr.add (e);
+      all_events.add (e);
     }
 
-    zg_log.insert_events_from_ptrarray ((owned) ptr_arr, null,
-                                        (src, res) =>
+    while (all_events.length > 0)
     {
-      unowned Zeitgeist.Log l = src as Zeitgeist.Log;
+      uint elements_pushed = uint.min ((uint) all_events.length, 100);
+      PtrArray ptr_arr = new PtrArray.with_free_func (Object.unref);
+      // careful here, the ptr array does ref_sink on the events
+      // inside Log.insert_events
+      for (uint i=0; i<elements_pushed; i++) ptr_arr.add (all_events[i]);
+
       try
       {
-        l.insert_events_from_ptrarray.end (res);
+        yield zg_log.insert_events_from_ptrarray ((owned) ptr_arr, null);
       }
       catch (GLib.Error err)
       {
         warning ("Error during inserting events: %s", err.message);
       }
-    });
 
-    queued_events = new List<Event> ();
+      all_events.remove_range (0, elements_pushed);
+    }
   }
 
   protected void run ()
