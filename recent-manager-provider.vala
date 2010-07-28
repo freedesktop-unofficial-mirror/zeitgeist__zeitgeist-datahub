@@ -132,6 +132,7 @@ public class RecentManagerGtk : DataProvider
                           ""); // FIXME: storage?!
 
       Event event;
+      int64 timestamp;
       
       // zeitgeist checks for duplicated events, so we can do this
       event = new Event.full (ZG_CREATE_EVENT,
@@ -139,7 +140,8 @@ public class RecentManagerGtk : DataProvider
                               actor,
                               subject, null);
       event.set_timestamp (ri.get_added () * 1000);
-      if (event.get_timestamp () > last_timestamp)
+      timestamp = event.get_timestamp ();
+      if (timestamp > last_timestamp && timestamp > 0)
       {
         events.prepend ((owned) event);
       }
@@ -149,7 +151,8 @@ public class RecentManagerGtk : DataProvider
                               actor,
                               subject, null);
       event.set_timestamp (ri.get_modified () * 1000);
-      if (event.get_timestamp () > last_timestamp)
+      timestamp = event.get_timestamp ();
+      if (timestamp > last_timestamp && timestamp > 0)
       {
         events.prepend ((owned) event);
       }
@@ -159,7 +162,8 @@ public class RecentManagerGtk : DataProvider
                               actor,
                               subject, null);
       event.set_timestamp (ri.get_visited () * 1000);
-      if (event.get_timestamp () > last_timestamp)
+      timestamp = event.get_timestamp ();
+      if (timestamp > last_timestamp && timestamp > 0)
       {
         events.prepend ((owned) event);
       }
