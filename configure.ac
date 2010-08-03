@@ -1,6 +1,6 @@
 AC_INIT([zeitgeist-datahub], [0.5.0])
 
-AC_CONFIG_MACRO_DIR([m4])
+#AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([.])
 AC_CONFIG_HEADERS([config.h])
 
@@ -20,7 +20,6 @@ fi
 AC_PROG_INSTALL
 AC_PROG_CC
 AC_STDC_HEADERS
-AM_PROG_LIBTOOL
 
 dnl ==============================================
 dnl Check for vala
