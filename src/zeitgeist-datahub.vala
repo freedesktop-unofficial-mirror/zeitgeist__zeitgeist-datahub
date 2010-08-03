@@ -61,13 +61,35 @@ public class DataHub : Object, DataHubService
     });
 
     registry = new DataSourceRegistry ();
-    start_data_providers ();
+  }
+
+  private void data_source_registered (DataSource ds)
+  {
+    unowned List<DataSource> iter = sources_info;
+    while (iter != null)
+    {
+      if (iter.data.get_unique_id () == ds.get_unique_id ())
+      {
+        break;
+      }
+      iter = iter.next;
+    }
+
+    if (iter != null)
+    {
+      iter.data = ds;
+    }
+    else
+    {
+      sources_info.prepend (ds);
+    }
   }
 
   private async void start_data_providers ()
   {
     try
     {
+      registry.source_registered.connect (data_source_registered);
       var sources = yield registry.get_data_sources (null);
       for (uint i=0; i<sources.len; i++)
       {
@@ -193,6 +215,7 @@ public class DataHub : Object, DataHubService
       if (request_name_result == DBus.RequestNameReply.PRIMARY_OWNER)
       {
         connection.register_object ("/org/gnome/zeitgeist/datahub", this);
+        start_data_providers ();
         main_loop.run ();
       }
       else
@@ -214,9 +237,34 @@ public class DataHub : Object, DataHubService
     main_loop.quit ();
   }
 
+  public string[] get_data_source_actors ()
+  {
+    string[] actors = {};
+    foreach (unowned DataSource src in sources_info)
+    {
+      unowned PtrArray template_arr = src.get_event_templates ();
+      if (template_arr != null)
+      {
+        for (uint i=0; i<template_arr.len; i++)
+        {
+          unowned Zeitgeist.Event event_template =
+              template_arr.index (i) as Zeitgeist.Event;
+          unowned string? actor = event_template.get_actor ();
+
+          if (actor != null && actor != "")
+          {
+            actors += actor;
+          }
+        }
+      }
+    }
+
+    return actors;
+  }
+
   public string[] get_data_providers () throws DBus.Error
   {
-    string [] arr = {};
+    string[] arr = {};
     foreach (var provider in providers)
     {
       arr += provider.unique_id;

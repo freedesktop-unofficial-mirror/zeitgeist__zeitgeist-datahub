@@ -76,6 +76,7 @@ public class RecentManagerGtk : DataProvider
     if (!enabled) return events;
 
     int64 signal_time = Timestamp.now ();
+    string[] ignored_actors = datahub.get_data_source_actors ();
 
     foreach (Gtk.RecentInfo ri in recent_manager.get_items ())
     {
@@ -118,6 +119,11 @@ public class RecentManagerGtk : DataProvider
       }
 
       var actor = "application://%s".printf (Path.get_basename (desktop_file));
+      if (actor in ignored_actors)
+      {
+        continue;
+      }
+
       unowned string? right_sep = ri.get_uri ().rstr (Path.DIR_SEPARATOR_S);
       string origin = right_sep != null ?
         ri.get_uri ().ndup ((char*) right_sep - (char*) ri.get_uri ()) :
