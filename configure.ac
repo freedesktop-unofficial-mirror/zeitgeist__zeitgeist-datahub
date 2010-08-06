@@ -51,6 +51,7 @@ AC_DEFINE_UNQUOTED(PKGDATADIR, "$PKGDATADIR", [Package base directory])
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
+doc/Makefile
 ])
 
 AC_OUTPUT
