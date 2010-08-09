@@ -112,6 +112,17 @@ public class DataHub : Object, DataHubService
     foreach (unowned DataProvider prov in providers)
     {
       bool enabled = true;
+      // we need to get the timestamp before we register the data provider
+      int64 timestamp = 0;
+      foreach (var src in sources_info)
+      {
+        if (src.get_unique_id () == prov.unique_id)
+        {
+          timestamp = src.get_timestamp ();
+          break;
+        }
+      }
+
       if (prov.register)
       {
         var ds = new DataSource.full (prov.unique_id,
@@ -130,15 +141,6 @@ public class DataHub : Object, DataHubService
       prov.items_available.connect (this.items_available);
       if (enabled)
       {
-        int64 timestamp = 0;
-        foreach (var src in sources_info)
-        {
-          if (src.get_unique_id () == prov.unique_id)
-          {
-            timestamp = src.get_timestamp ();
-            break;
-          }
-        }
         prov.last_timestamp = timestamp;
         prov.start ();
       }

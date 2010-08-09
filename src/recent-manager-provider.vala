@@ -52,8 +52,18 @@ public class RecentManagerGtk : DataProvider
 
     recent_manager = Gtk.RecentManager.get_default ();
     recent_manager.set_limit (-1);
+  }
 
+  public override void start ()
+  {
     recent_manager.changed.connect (this.items_changed);
+
+    items_available ();
+  }
+
+  public override void stop ()
+  {
+    recent_manager.changed.disconnect (this.items_changed);
   }
 
   private void items_changed ()

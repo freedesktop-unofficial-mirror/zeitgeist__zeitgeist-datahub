@@ -37,6 +37,10 @@ public abstract class DataProvider : Object
   {
     items_available ();
   }
+
+  public virtual void stop ()
+  {
+  }
   
   protected abstract List<Event> _get_items ();
   // DataHub will call get_items when items_available is emitted
