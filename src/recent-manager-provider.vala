@@ -145,9 +145,10 @@ public class RecentManagerGtk : DataProvider
                               ZG_USER_ACTIVITY,
                               actor,
                               subject, null);
-      event.set_timestamp (ri.get_added () * 1000);
-      timestamp = event.get_timestamp ();
-      if (timestamp > last_timestamp && timestamp > 0)
+      timestamp = ri.get_added ();
+      timestamp *= 1000;
+      event.set_timestamp (timestamp);
+      if (timestamp > last_timestamp && timestamp >= 0)
       {
         events.prepend ((owned) event);
       }
@@ -156,9 +157,10 @@ public class RecentManagerGtk : DataProvider
                               ZG_USER_ACTIVITY,
                               actor,
                               subject, null);
-      event.set_timestamp (ri.get_modified () * 1000);
-      timestamp = event.get_timestamp ();
-      if (timestamp > last_timestamp && timestamp > 0)
+      timestamp = ri.get_modified ();
+      timestamp *= 1000;
+      event.set_timestamp (timestamp);
+      if (timestamp > last_timestamp && timestamp >= 0)
       {
         events.prepend ((owned) event);
       }
@@ -167,9 +169,10 @@ public class RecentManagerGtk : DataProvider
                               ZG_USER_ACTIVITY,
                               actor,
                               subject, null);
-      event.set_timestamp (ri.get_visited () * 1000);
-      timestamp = event.get_timestamp ();
-      if (timestamp > last_timestamp && timestamp > 0)
+      timestamp = ri.get_visited ();
+      timestamp *= 1000;
+      event.set_timestamp (timestamp);
+      if (timestamp > last_timestamp && timestamp >= 0)
       {
         events.prepend ((owned) event);
       }
