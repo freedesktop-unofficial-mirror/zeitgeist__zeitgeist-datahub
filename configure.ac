@@ -6,7 +6,14 @@ AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([1.11])
 dnl -- Intl
-dnl IT_PROG_INTLTOOL([0.35.0])
+IT_PROG_INTLTOOL([0.35.0])
+GETTEXT_PACKAGE=zeitgeist-datahub
+AC_SUBST([GETTEXT_PACKAGE])
+AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[Gettext package])
+AM_GLIB_GNU_GETTEXT
+
+zeitgeist_datahublocaledir='${prefix}/${DATADIRNAME}/locale'
+AC_SUBST(zeitgeist_datahublocaledir)
 
 dnl -- Populate top_srcdir variable
 top_srcdir=$(readlink -f $0 | sed -e s/configure$//)
@@ -50,6 +57,7 @@ AC_DEFINE_UNQUOTED(PKGDATADIR, "$PKGDATADIR", [Package base directory])
 
 AC_CONFIG_FILES([
 Makefile
+po/Makefile.in
 src/Makefile
 doc/Makefile
 ])
