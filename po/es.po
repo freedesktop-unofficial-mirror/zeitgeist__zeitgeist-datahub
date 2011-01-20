@@ -1,0 +1,25 @@
+# Spanish translation for Zeitgeist-datahub
+# 
+# This file is distributed under the same license as the zeitgeist-datahub package.
+# Federico Mena Quintero <federico@gnome.org>, 2011.
+#
+
+msgid ""
+msgstr ""
+"Project-Id-Version: zeitgeist-datahub\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-01-19 13:24-0600\n"
+"PO-Revision-Date: 2011-01-19 13:29-0600\n"
+"Last-Translator: Federico Mena Quintero <federico@gnome.org>\n"
+"Language-Team: Spanish <es@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../src/zeitgeist-datahub.desktop.in.h:1
+msgid "Start the Zeitgeist Datahub for passive loggers"
+msgstr "Iniciar Zeitgeist Datahub para los monitores pasivos"
+
+#: ../src/zeitgeist-datahub.desktop.in.h:2
+msgid "Zeitgeist Datahub"
+msgstr "Zeitgeist Datahub"

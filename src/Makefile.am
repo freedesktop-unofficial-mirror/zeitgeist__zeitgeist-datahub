@@ -16,3 +16,15 @@ zeitgeist_datahub_SOURCES = \
 	zeitgeist-datahub.vala \
 	$(NULL)
 
+xdgautostart_in_files = \
+	zeitgeist-datahub.desktop.in
+
+xdgautostartdir=$(sysconfdir)/xdg/autostart
+
+xdgautostart_DATA = $(xdgautostart_in_files:.desktop.in=.desktop)
+@INTLTOOL_DESKTOP_RULE@
+
+CLEANFILES = zeitgeist-datahub.desktop
+
+EXTRA_DIST = \
+	$(xdgautostart_in_files)
