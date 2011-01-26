@@ -1,4 +1,4 @@
-AC_INIT([zeitgeist-datahub], [0.5.1])
+AC_INIT([zeitgeist-datahub], [0.6.1])
 
 #AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([.])
