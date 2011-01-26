@@ -197,7 +197,8 @@ public class RecentManagerGtk : DataProvider
 
   private string? get_ooo_desktop_file_for_mimetype (string mimetype)
   {
-    return find_desktop_file_for_app ("ooffice", mimetype);
+    return find_desktop_file_for_app ("libreoffice", mimetype) ??
+      find_desktop_file_for_app ("ooffice", mimetype);
   }
 
   private string? find_desktop_file_for_app (string app_name,
