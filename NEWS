@@ -1,3 +1,19 @@
+Zeitgeist-datahub 0.6.0
+=======================
+
+* Added an XDG autostart .desktop file, so zeitgeist-datahub gets
+  started at the beginning of the user's session. (Federico Mena)
+
+* Added translation infrastructure and a Spanish
+  translation. (Federico Mena)
+
+* Make the OpenOffice.org workaround also work on LibreOffice (Michal Hruby)
+
+Zeitgeist-datahub 0.5.1
+=======================
+
+ * Fixed timestamps on 32-bit CPUs and race conditions (Michal Hruby)
+
 Zeitgeist-datahub 0.5.0
 =======================
 
