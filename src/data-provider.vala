@@ -35,21 +35,12 @@ public abstract class DataProvider : Object
 
   public virtual void start ()
   {
-    items_available ();
   }
 
   public virtual void stop ()
   {
   }
-  
-  protected abstract List<Event> _get_items ();
-  // DataHub will call get_items when items_available is emitted
-  public List<Event> get_items ()
-  {
-    if (enabled) return _get_items ();
-    return new List<Event> ();
-  }
 
-  public signal void items_available ();
+  public signal void items_available (GenericArray<Event> events);
 }
 

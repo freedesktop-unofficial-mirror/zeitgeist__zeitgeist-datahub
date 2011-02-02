@@ -58,7 +58,7 @@ public class RecentManagerGtk : DataProvider
   {
     recent_manager.changed.connect (this.items_changed);
 
-    items_available ();
+    items_available (get_items ());
   }
 
   public override void stop ()
@@ -72,18 +72,16 @@ public class RecentManagerGtk : DataProvider
     {
       idle_id = Idle.add (() =>
       {
-        items_available ();
+        items_available (get_items ());
         idle_id = 0;
         return false;
       });
     }
   }
 
-  protected override List<Event> _get_items ()
+  protected GenericArray<Event> get_items ()
   {
-    List<Event> events = new List<Event> ();
-
-    if (!enabled) return events;
+    GenericArray<Event> events = new GenericArray<Event> ();
 
     int64 signal_time = Timestamp.now ();
     string[] ignored_actors = datahub.get_data_source_actors ();
@@ -134,10 +132,7 @@ public class RecentManagerGtk : DataProvider
         continue;
       }
 
-      unowned string? right_sep = ri.get_uri ().rstr (Path.DIR_SEPARATOR_S);
-      string origin = right_sep != null ?
-        ri.get_uri ().ndup ((char*) right_sep - (char*) ri.get_uri ()) :
-        ri.get_uri ();
+      string origin = Path.get_dirname (ri.get_uri ());
       var subject =
         new Subject.full (ri.get_uri (),
                           interpretation_for_mimetype (ri.get_mime_type ()),
@@ -160,7 +155,7 @@ public class RecentManagerGtk : DataProvider
       event.set_timestamp (timestamp);
       if (timestamp > last_timestamp && timestamp >= 0)
       {
-        events.prepend ((owned) event);
+        events.add ((owned) event);
       }
       
       event = new Event.full (ZG_MODIFY_EVENT,
@@ -172,7 +167,7 @@ public class RecentManagerGtk : DataProvider
       event.set_timestamp (timestamp);
       if (timestamp > last_timestamp && timestamp >= 0)
       {
-        events.prepend ((owned) event);
+        events.add ((owned) event);
       }
       
       event = new Event.full (ZG_ACCESS_EVENT,
@@ -184,14 +179,12 @@ public class RecentManagerGtk : DataProvider
       event.set_timestamp (timestamp);
       if (timestamp > last_timestamp && timestamp >= 0)
       {
-        events.prepend ((owned) event);
+        events.add ((owned) event);
       }
-
     }
 
     last_timestamp = signal_time;
 
-    events.reverse ();
     return events;
   }
 

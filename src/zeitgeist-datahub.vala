@@ -35,7 +35,7 @@ public class DataHub : Object, DataHubService
   private MainLoop main_loop;
   private List<DataProvider> providers;
   private List<DataSource> sources_info; // list got from ZG's Registry
-  private List<Event> queued_events;
+  private GenericArray<Event> queued_events;
   private uint idle_id = 0;
 
   public DataHub ()
@@ -47,7 +47,7 @@ public class DataHub : Object, DataHubService
   {
     providers = new List<DataProvider> ();
     sources_info = new List<DataSource> ();
-    queued_events = new List<Event> ();
+    queued_events = new GenericArray<Event> ();
     main_loop = new MainLoop ();
 
     zg_log = new Zeitgeist.Log ();
@@ -147,10 +147,13 @@ public class DataHub : Object, DataHubService
     }
   }
 
-  private void items_available (DataProvider prov)
+  private void items_available (DataProvider prov, GenericArray<Event> events)
   {
-    queued_events.concat (prov.get_items ());
-    if (queued_events != null && idle_id == 0)
+    if (!prov.enabled) return;
+
+    events.foreach ((e) => { queued_events.add (e); });
+
+    if (queued_events.length > 0 && idle_id == 0)
     {
       idle_id = Idle.add (() => 
       {
@@ -163,21 +166,18 @@ public class DataHub : Object, DataHubService
 
   private void insert_events ()
   {
-    debug ("Inserting %u events", queued_events.length ());
+    debug ("Inserting %u events", queued_events.length);
 
     batch_insert_events ();
 
-    queued_events = new List<Event> ();
+    queued_events = new GenericArray<Event> ();
   }
 
   protected async void batch_insert_events ()
   {
     // copy the events to GenericArray (with a ref on them)
     GenericArray<Event> all_events = new GenericArray<Event> ();
-    foreach (var e in queued_events)
-    {
-      all_events.add (e);
-    }
+    queued_events.foreach ((e) => { all_events.add (e); });
 
     while (all_events.length > 0)
     {
