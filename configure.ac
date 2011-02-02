@@ -31,7 +31,7 @@ AC_STDC_HEADERS
 dnl ==============================================
 dnl Check for vala
 dnl ==============================================
-AM_PROG_VALAC([0.9.4])
+AM_PROG_VALAC([0.9.8])
 
 AM_SILENT_RULES([yes])
 
