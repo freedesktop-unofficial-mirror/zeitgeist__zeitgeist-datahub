@@ -25,7 +25,7 @@ using Zeitgeist;
 [DBus (name = "org.gnome.zeitgeist.datahub")]
 public interface DataHubService : Object
 {
-  public abstract string[] get_data_providers () throws DBus.Error;
+  public abstract string[] get_data_providers () throws IOError;
 }
 
 public class DataHub : Object, DataHubService
@@ -200,36 +200,23 @@ public class DataHub : Object, DataHubService
     }
   }
 
+  const string UNIQUE_NAME = "org.gnome.zeitgeist.datahub";
+  const string OBJECT_PATH = "/org/gnome/zeitgeist/datahub";
+
   protected void run ()
   {
-    try
-    {
-      var connection = DBus.Bus.get (DBus.BusType.SESSION);
-      dynamic DBus.Object bus =
-        connection.get_object ("org.freedesktop.DBus",
-                               "/org/freedesktop/DBus",
-                               "org.freedesktop.DBus");
-
-      uint request_name_result =
-        bus.request_name ("org.gnome.zeitgeist.datahub", 
-                          (uint) DBus.NameFlag.DO_NOT_QUEUE);
-
-      if (request_name_result == DBus.RequestNameReply.PRIMARY_OWNER)
-      {
-        connection.register_object ("/org/gnome/zeitgeist/datahub", this);
-        start_data_providers ();
-        main_loop.run ();
-      }
-      else
+    Bus.own_name (BusType.SESSION, UNIQUE_NAME, BusNameOwnerFlags.NONE,
+      (conn) => { conn.register_object (OBJECT_PATH, (DataHubService) this); },
+      () => { start_data_providers (); },
+      () =>
       {
         warning ("Unable to get name \"org.gnome.zeitgeist.datahub\"" +
                  " on the bus!");
+        this.quit ();
       }
-    }
-    catch (GLib.Error err)
-    {
-      warning ("%s", err.message);
-    }
+    );
+        
+    main_loop.run ();
   }
 
   protected void quit ()
@@ -264,7 +251,7 @@ public class DataHub : Object, DataHubService
     return actors;
   }
 
-  public string[] get_data_providers () throws DBus.Error
+  public string[] get_data_providers () throws IOError
   {
     string[] arr = {};
     foreach (var provider in providers)
