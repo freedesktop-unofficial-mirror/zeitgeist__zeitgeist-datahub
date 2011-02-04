@@ -14,6 +14,7 @@ zeitgeist_datahub_CFLAGS = $(DATAHUB_MODULES_CFLAGS) $(GTK_CFLAGS)
 zeitgeist_datahub_LDADD = $(DATAHUB_MODULES_LIBS) $(GTK_LIBS)
 zeitgeist_datahub_SOURCES = \
 	data-provider.vala \
+	desktop-launch-listener.vala \
 	recent-manager-provider.vala \
 	zeitgeist-datahub.vala \
 	$(NULL)

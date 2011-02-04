@@ -109,6 +109,11 @@ public class DataHub : Object, DataHubService
     */
     providers.prepend (new RecentManagerGtk (this));
 
+    if (GLibExtra.check_version (2, 27, 93))
+    {
+      providers.prepend (new DesktopLaunchListener (this));
+    }
+
     foreach (unowned DataProvider prov in providers)
     {
       bool enabled = true;
