@@ -77,15 +77,14 @@ public class DesktopLaunchListener : DataProvider
                                 string signal_name,
                                 Variant parameters)
   {
-    debug ("received launched signal");
     // unpack the variant
     Variant desktop_variant;
     VariantIter uris;
-    VariantIter map_iter;
+    Variant dict;
     int64 pid;
 
-    parameters.get ("(@aysxasa{sv})", out desktop_variant, null,
-                    out pid, out uris, out map_iter);
+    parameters.get ("(@aysxas@a{sv})", out desktop_variant, null,
+                    out pid, out uris, out dict);
 
     string desktop_file = desktop_variant.get_bytestring ();
     if (desktop_file == "") return;
@@ -97,14 +96,62 @@ public class DesktopLaunchListener : DataProvider
       debug ("ran with uri: %s", uri);
     }
 
-    // here we should be able to get info about the origin
-    string key_name;
-    Variant val;
-    while (map_iter.next ("{sv}", out key_name, out val))
+    // here we should be able to get info about the origin of the launch
+    HashTable<string, Variant> extra_params = (HashTable<string, Variant>) dict;
+
+    string? launched_display_name;
+    string launched_uri = get_uri_for_desktop_file (desktop_file,
+                                                    out launched_display_name);
+    if (launched_uri == null)
     {
-      debug ("%s: %s", key_name, val.print (true));
+      warning ("Unable to open desktop file '%s'", desktop_file);
+      return;
     }
 
+    string? launcher_uri = null;
+    unowned Variant origin_df = extra_params.lookup ("origin-desktop-file");
+    if (origin_df != null)
+    {
+      launcher_uri = get_uri_for_desktop_file (origin_df.get_bytestring ());
+    }
+    else
+    {
+      unowned Variant origin_prgname = extra_params.lookup ("origin-prgname");
+      if (origin_prgname != null)
+      {
+        unowned string? prgname = origin_prgname.get_bytestring ();
+        string origin_desktop_id = prgname + ".desktop";
+        DesktopAppInfo id_check = new DesktopAppInfo (origin_desktop_id);
+        if (id_check != null) launcher_uri = "application://%s".printf (origin_desktop_id);
+      }
+    }
+
+    // FIXME: check if the app should be shown, and return? /
+    //   set manifestation to WORLD?_EVENT
+
+    var event = new Zeitgeist.Event ();
+    var subject = new Zeitgeist.Subject ();
+
+    event.set_actor (launcher_uri);
+    event.set_interpretation (Zeitgeist.ZG_ACCESS_EVENT);
+    event.set_manifestation (Zeitgeist.ZG_USER_ACTIVITY);
+    event.add_subject (subject);
+
+    subject.set_uri (launched_uri);
+    subject.set_interpretation (Zeitgeist.NFO_SOFTWARE);
+    subject.set_manifestation (Zeitgeist.NFO_SOFTWARE_ITEM);
+    subject.set_mimetype ("application/x-desktop");
+    subject.set_text (launched_display_name);
+
+    var arr = new GenericArray<Event> ();
+    arr.add (event);
+
+    items_available (arr);
+  }
+  
+  private string? get_uri_for_desktop_file (string desktop_file,
+                                            out string? display_name = null)
+  {
     DesktopAppInfo? dai;
     if (Path.is_absolute (desktop_file))
     {
@@ -117,33 +164,13 @@ public class DesktopLaunchListener : DataProvider
 
     if (dai == null)
     {
-      warning ("Unable to open desktop file '%s'", desktop_file);
-      return;
+      display_name = null;
+      return null;
     }
 
-    // FIXME: check if the app should be shown, and return? /
-    //   set manifestation to WORLD?_EVENT
-
     string desktop_id = dai.get_id () ?? Path.get_basename (dai.get_filename ());
-
-    var event = new Zeitgeist.Event ();
-    var subject = new Zeitgeist.Subject ();
-
-    //event.set_actor ("application://");
-    event.set_interpretation (Zeitgeist.ZG_ACCESS_EVENT);
-    event.set_manifestation (Zeitgeist.ZG_USER_ACTIVITY);
-    event.add_subject (subject);
-
-    subject.set_uri ("application://" + desktop_id);
-    subject.set_interpretation (Zeitgeist.NFO_SOFTWARE);
-    subject.set_manifestation (Zeitgeist.NFO_SOFTWARE_ITEM);
-    subject.set_mimetype ("application/x-desktop");
-    subject.set_text (dai.get_display_name ());
-
-    var arr = new GenericArray<Event> ();
-    arr.add (event);
-
-    items_available (arr);
+    display_name = dai.get_display_name ();
+    return "application://%s".printf (desktop_id);
   }
 
   public override void stop ()

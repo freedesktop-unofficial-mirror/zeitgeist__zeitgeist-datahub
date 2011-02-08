@@ -109,7 +109,7 @@ public class DataHub : Object, DataHubService
     */
     providers.prepend (new RecentManagerGtk (this));
 
-    if (GLibExtra.check_version (2, 27, 93))
+    if (GLibExtra.check_version (2, 28, 0))
     {
       providers.prepend (new DesktopLaunchListener (this));
     }
