@@ -1,3 +1,11 @@
+Zeitgeist-datahub 0.7.0
+=======================
+
+* Ported to use GDBus (Michal Hruby)
+
+* Added module which listens for desktop file launches (only used when running
+  GLib 2.28 or later) (Michal Hruby)
+
 Zeitgeist-datahub 0.6.0
 =======================
 
