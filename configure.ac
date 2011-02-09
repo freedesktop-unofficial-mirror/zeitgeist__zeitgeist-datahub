@@ -31,18 +31,18 @@ AC_STDC_HEADERS
 dnl ==============================================
 dnl Check for vala
 dnl ==============================================
-AM_PROG_VALAC([0.9.8])
+AM_PROG_VALAC([0.11.2])
 
 AM_SILENT_RULES([yes])
 
 dnl ==============================================
 dnl Check that we meet the dependencies
 dnl ==============================================
-MIN_GLIB_VERSION=2.22.0
+MIN_GLIB_VERSION=2.26.0
 MIN_GTK_VERSION=2.16.0
-MIN_ZEITGEIST_VERSION=0.2.3
+MIN_ZEITGEIST_VERSION=0.3.1
 
-LIBRARY_MODULES="glib-2.0 >= $MIN_GLIB_VERSION gobject-2.0 dbus-glib-1 zeitgeist-1.0 >= $MIN_ZEITGEIST_VERSION"
+LIBRARY_MODULES="glib-2.0 >= $MIN_GLIB_VERSION gobject-2.0 gio-2.0 gio-unix-2.0 zeitgeist-1.0 >= $MIN_ZEITGEIST_VERSION"
 
 PKG_CHECK_MODULES(DATAHUB_MODULES, [$LIBRARY_MODULES])
 PKG_CHECK_MODULES(GTK, [gtk+-2.0 >= $MIN_GTK_VERSION])

@@ -1,7 +1,9 @@
 VALAFLAGS = \
-	--pkg dbus-glib-1 \
+	--pkg gio-2.0 \
+	--pkg gio-unix-2.0 \
 	--pkg gtk+-2.0 \
 	--pkg zeitgeist-1.0 \
+	glib-extra.vapi \
 	$(NULL)
 
 datahubdir = $(bindir)
@@ -12,6 +14,7 @@ zeitgeist_datahub_CFLAGS = $(DATAHUB_MODULES_CFLAGS) $(GTK_CFLAGS)
 zeitgeist_datahub_LDADD = $(DATAHUB_MODULES_LIBS) $(GTK_LIBS)
 zeitgeist_datahub_SOURCES = \
 	data-provider.vala \
+	desktop-launch-listener.vala \
 	recent-manager-provider.vala \
 	zeitgeist-datahub.vala \
 	$(NULL)
