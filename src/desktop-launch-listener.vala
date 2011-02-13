@@ -55,6 +55,28 @@ public class DesktopLaunchListener : DataProvider
     {
       warning ("%s", err.message);
     }
+
+    unowned string session_var = Environment.get_variable ("DESKTOP_SESSION");
+    if (session_var == null)
+    {
+      // let's assume it's gnome
+      DesktopAppInfo.set_desktop_env ("GNOME");
+      return;
+    }
+    
+    string desktop_session = session_var.up ();
+    if (desktop_session.has_prefix ("GNOME"))
+    {
+      DesktopAppInfo.set_desktop_env ("GNOME");
+    }
+    else if (desktop_session.has_prefix ("KDE"))
+    {
+      DesktopAppInfo.set_desktop_env ("KDE");
+    }
+    else if (desktop_session.has_prefix ("XFCE"))
+    {
+      DesktopAppInfo.set_desktop_env ("XFCE");
+    }
   }
 
   public override void start ()
@@ -99,9 +121,9 @@ public class DesktopLaunchListener : DataProvider
     // here we should be able to get info about the origin of the launch
     HashTable<string, Variant> extra_params = (HashTable<string, Variant>) dict;
 
-    string? launched_display_name;
+    DesktopAppInfo? dai;
     string launched_uri = get_uri_for_desktop_file (desktop_file,
-                                                    out launched_display_name);
+                                                    out dai);
     if (launched_uri == null)
     {
       warning ("Unable to open desktop file '%s'", desktop_file);
@@ -126,8 +148,11 @@ public class DesktopLaunchListener : DataProvider
       }
     }
 
-    // FIXME: check if the app should be shown, and return? /
-    //   set manifestation to WORLD?_EVENT
+    if (!dai.should_show ())
+    {
+      // FIXME: do something else? Log with WORLD_EVENT?
+      return;
+    }
 
     var event = new Zeitgeist.Event ();
     var subject = new Zeitgeist.Subject ();
@@ -141,7 +166,7 @@ public class DesktopLaunchListener : DataProvider
     subject.set_interpretation (Zeitgeist.NFO_SOFTWARE);
     subject.set_manifestation (Zeitgeist.NFO_SOFTWARE_ITEM);
     subject.set_mimetype ("application/x-desktop");
-    subject.set_text (launched_display_name);
+    subject.set_text (dai.get_display_name ());
 
     var arr = new GenericArray<Event> ();
     arr.add (event);
@@ -150,9 +175,8 @@ public class DesktopLaunchListener : DataProvider
   }
   
   private string? get_uri_for_desktop_file (string desktop_file,
-                                            out string? display_name = null)
+                                            out DesktopAppInfo dai = null)
   {
-    DesktopAppInfo? dai;
     if (Path.is_absolute (desktop_file))
     {
       dai = new DesktopAppInfo.from_filename (desktop_file);
@@ -164,12 +188,10 @@ public class DesktopLaunchListener : DataProvider
 
     if (dai == null)
     {
-      display_name = null;
       return null;
     }
 
     string desktop_id = dai.get_id () ?? Path.get_basename (dai.get_filename ());
-    display_name = dai.get_display_name ();
     return "application://%s".printf (desktop_id);
   }
 
