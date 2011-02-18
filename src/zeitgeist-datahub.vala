@@ -231,12 +231,12 @@ public class DataHub : Object, DataHubService
     main_loop.quit ();
   }
 
-  public string[] get_data_source_actors (bool only_running = true)
+  public string[] get_data_source_actors (bool only_enabled = true)
   {
     string[] actors = {};
     foreach (unowned DataSource src in sources_info)
     {
-      if (only_running && !src.is_running ()) continue;
+      if (only_enabled && !src.is_enabled ()) continue;
       unowned PtrArray template_arr = src.get_event_templates ();
       if (template_arr != null)
       {
