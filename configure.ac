@@ -40,7 +40,7 @@ dnl Check that we meet the dependencies
 dnl ==============================================
 MIN_GLIB_VERSION=2.26.0
 MIN_GTK_VERSION=2.16.0
-MIN_ZEITGEIST_VERSION=0.3.1
+MIN_ZEITGEIST_VERSION=0.3.3
 
 LIBRARY_MODULES="glib-2.0 >= $MIN_GLIB_VERSION gobject-2.0 gio-2.0 gio-unix-2.0 zeitgeist-1.0 >= $MIN_ZEITGEIST_VERSION"
 
