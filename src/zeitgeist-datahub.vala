@@ -38,6 +38,8 @@ public class DataHub : Object, DataHubService
   private GenericArray<Event> queued_events;
   private uint idle_id = 0;
 
+  public int return_code { get; private set; default = 0; }
+
   public DataHub ()
   {
     GLib.Object ();
@@ -217,6 +219,7 @@ public class DataHub : Object, DataHubService
       {
         warning ("Unable to get name \"org.gnome.zeitgeist.datahub\"" +
                  " on the bus!");
+        this.return_code = 1;
         this.quit ();
       }
     );
@@ -267,9 +270,11 @@ public class DataHub : Object, DataHubService
     return arr;
   }
 
-  public static void main (string[] args)
+  public static int main (string[] args)
   {
     var hub = new DataHub ();
     hub.run ();
+
+    return hub.return_code;
   }
 }
