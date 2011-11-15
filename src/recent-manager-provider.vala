@@ -122,7 +122,8 @@ public class RecentManagerGtk : DataProvider
 
       if (desktop_file == null)
       {
-        warning ("Desktop file for %s was not found", exec[0]);
+        warning ("Desktop file for \"%s\" was not found, exec: %s, mime_type: %s", 
+                 uri, exec[0], ri.get_mime_type ());
         continue; // this makes us sad panda
       }
 
@@ -237,13 +238,20 @@ public class RecentManagerGtk : DataProvider
         {
           if (fi.get_name ().has_suffix (".desktop"))
           {
-            string contents;
             var desktop_file = Path.build_filename (p, fi.get_name (), null);
             var f = File.new_for_path (desktop_file);
             try
             {
+#if VALA_0_14
+              uint8[] contents_array;
+              if (f.load_contents (null, out contents_array, null))
+              {
+                unowned string contents = (string) contents_array;
+#else
+              string contents;
               if (f.load_contents (null, out contents, null, null))
               {
+#endif
                 if ("Exec=%s".printf (app_name) in contents)
                 {
                   if (mimetype == null || mimetype in contents)
