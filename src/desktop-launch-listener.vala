@@ -56,6 +56,13 @@ public class DesktopLaunchListener : DataProvider
       warning ("%s", err.message);
     }
 
+    unowned string desktop_env = Environment.get_variable ("XDG_CURRENT_DESKTOP");
+    if (desktop_env != null)
+    {
+      DesktopAppInfo.set_desktop_env (desktop_env);
+      return;
+    }
+
     unowned string session_var = Environment.get_variable ("DESKTOP_SESSION");
     if (session_var == null)
     {
@@ -63,7 +70,7 @@ public class DesktopLaunchListener : DataProvider
       DesktopAppInfo.set_desktop_env ("GNOME");
       return;
     }
-    
+
     string desktop_session = session_var.up ();
     if (desktop_session.has_prefix ("GNOME"))
     {
@@ -76,6 +83,11 @@ public class DesktopLaunchListener : DataProvider
     else if (desktop_session.has_prefix ("XFCE"))
     {
       DesktopAppInfo.set_desktop_env ("XFCE");
+    }
+    else
+    {
+      // assume GNOME
+      DesktopAppInfo.set_desktop_env ("GNOME");
     }
   }
 
