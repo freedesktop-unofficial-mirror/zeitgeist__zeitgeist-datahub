@@ -272,6 +272,7 @@ public class DataHub : Object, DataHubService
 
   public static int main (string[] args)
   {
+    Environment.set_prgname ("zeitgeist-datahub");
     var hub = new DataHub ();
     hub.run ();
 
