@@ -89,7 +89,7 @@ public class RecentManagerGtk : DataProvider
     foreach (Gtk.RecentInfo ri in recent_manager.get_items ())
     {
       unowned string uri = ri.get_uri ();
-      if (!ri.exists () || ri.get_private_hint () || 
+      if (!ri.exists () || ri.get_private_hint () ||
           uri.has_prefix ("file:///tmp/"))
       {
         continue;
@@ -122,7 +122,7 @@ public class RecentManagerGtk : DataProvider
 
       if (desktop_file == null)
       {
-        warning ("Desktop file for \"%s\" was not found, exec: %s, mime_type: %s", 
+        warning ("Desktop file for \"%s\" was not found, exec: %s, mime_type: %s",
                  uri, exec[0], ri.get_mime_type ());
         continue; // this makes us sad panda
       }
@@ -145,7 +145,7 @@ public class RecentManagerGtk : DataProvider
 
       Event event;
       int64 timestamp;
-      
+
       // zeitgeist checks for duplicated events, so we can do this
       event = new Event.full (ZG_CREATE_EVENT,
                               ZG_USER_ACTIVITY,
@@ -158,7 +158,7 @@ public class RecentManagerGtk : DataProvider
       {
         events.add ((owned) event);
       }
-      
+
       event = new Event.full (ZG_MODIFY_EVENT,
                               ZG_USER_ACTIVITY,
                               actor,
@@ -170,7 +170,7 @@ public class RecentManagerGtk : DataProvider
       {
         events.add ((owned) event);
       }
-      
+
       event = new Event.full (ZG_ACCESS_EVENT,
                               ZG_USER_ACTIVITY,
                               actor,
@@ -269,7 +269,7 @@ public class RecentManagerGtk : DataProvider
           }
           fi = enumerator.next_file (null);
         }
-        
+
         enumerator.close (null);
       }
       catch (GLib.Error err)
@@ -281,4 +281,3 @@ public class RecentManagerGtk : DataProvider
     return null;
   }
 }
-
