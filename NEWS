@@ -2,6 +2,7 @@ Zeitgeist-datahub 0.8.0
 =======================
 
 * Make sure correct desktop environment is set for DesktopAppInfo (Michal Hruby)
+* Log events from KDE Recent Document (Siegfried Gevatter)
 
 Zeitgeist-datahub 0.7.0
 =======================
