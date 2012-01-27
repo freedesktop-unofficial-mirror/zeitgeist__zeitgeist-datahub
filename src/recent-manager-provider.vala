@@ -89,11 +89,10 @@ public class RecentManagerGtk : DataProvider
     foreach (Gtk.RecentInfo ri in recent_manager.get_items ())
     {
       unowned string uri = ri.get_uri ();
-      if (!ri.exists () || ri.get_private_hint () ||
-          uri.has_prefix ("file:///tmp/"))
-      {
+      if (ri.get_private_hint () || uri.has_prefix ("file:///tmp/"))
         continue;
-      }
+      if (uri.has_prefix ("file://") && !ri.exists ())
+        continue;
 
       var last_app = ri.last_application ().strip ();
       unowned string exec_str;
