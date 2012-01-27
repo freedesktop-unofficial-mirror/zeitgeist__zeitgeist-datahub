@@ -3,6 +3,7 @@ Zeitgeist-datahub 0.8.0
 
 * Make sure correct desktop environment is set for DesktopAppInfo (Michal Hruby)
 * Fix recent-manager-provider to log remote files (Siegfried Gevatter) 
+* Log events from KDE Recent Document (Siegfried Gevatter)
 
 Zeitgeist-datahub 0.7.0
 =======================

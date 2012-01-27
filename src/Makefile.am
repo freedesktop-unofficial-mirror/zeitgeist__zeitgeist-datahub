@@ -15,7 +15,9 @@ zeitgeist_datahub_LDADD = $(DATAHUB_MODULES_LIBS) $(GTK_LIBS)
 zeitgeist_datahub_SOURCES = \
 	data-provider.vala \
 	desktop-launch-listener.vala \
+	kde-recent-document-provider.vala \
 	recent-manager-provider.vala \
+	utils.vala \
 	zeitgeist-datahub.vala \
 	$(NULL)
 
