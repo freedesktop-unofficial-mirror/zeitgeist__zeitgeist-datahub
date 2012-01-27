@@ -1,7 +1,7 @@
 /*
  * Zeitgeist
  *
- * Copyright (C) 2010 Michal Hruby <michal.mhr@gmail.com>
+ * Copyright (C) 2010, 2012 Michal Hruby <michal.mhr@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -44,6 +44,8 @@ public class DesktopLaunchListener : DataProvider
 
   private GLib.DBusConnection bus;
   private uint launched_signal_id = 0;
+
+  private string[] prefixes;
 
   construct
   {
@@ -89,12 +91,20 @@ public class DesktopLaunchListener : DataProvider
       // assume GNOME
       DesktopAppInfo.set_desktop_env ("GNOME");
     }
+
+    foreach (unowned string data_dir in Environment.get_system_data_dirs ())
+    {
+      prefixes += Path.build_path (Path.DIR_SEPARATOR_S,
+                                   data_dir,
+                                   "applications",
+                                   Path.DIR_SEPARATOR_S, null);
+    }
   }
 
   public override void start ()
   {
     if (launched_signal_id != 0) return;
-    
+
     launched_signal_id = bus.signal_subscribe (null,
                                                "org.gtk.gio.DesktopAppInfo",
                                                "Launched",
@@ -185,7 +195,30 @@ public class DesktopLaunchListener : DataProvider
 
     items_available (arr);
   }
-  
+
+  /*
+   * Takes a path to a .desktop file and returns the Desktop ID for it.
+   * This isn't simply the basename, but may contain part of the path;
+   * eg. kde4-kate.desktop for /usr/share/applications/kde4/kate.desktop.
+   * */
+  private string extract_desktop_id (string path)
+  {
+    if (!path.has_prefix ("/"))
+      return path;
+
+    foreach (unowned string prefix in prefixes)
+    {
+      string without_prefix = path.substring (prefix.length);
+
+      if (Path.DIR_SEPARATOR_S in without_prefix)
+        return without_prefix.replace (Path.DIR_SEPARATOR_S, "-");
+
+      return without_prefix;
+    }
+
+    return Path.get_basename (path);
+  }
+
   private string? get_uri_for_desktop_file (string desktop_file,
                                             out DesktopAppInfo dai = null)
   {
@@ -203,7 +236,7 @@ public class DesktopLaunchListener : DataProvider
       return null;
     }
 
-    string desktop_id = dai.get_id () ?? Path.get_basename (dai.get_filename ());
+    string desktop_id = dai.get_id () ?? extract_desktop_id (dai.get_filename ());
     return "application://%s".printf (desktop_id);
   }
 
