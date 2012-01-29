@@ -45,8 +45,6 @@ public class DesktopLaunchListener : DataProvider
   private GLib.DBusConnection bus;
   private uint launched_signal_id = 0;
 
-  private string[] prefixes;
-
   construct
   {
     try
@@ -63,41 +61,6 @@ public class DesktopLaunchListener : DataProvider
     {
       DesktopAppInfo.set_desktop_env (desktop_env);
       return;
-    }
-
-    unowned string session_var = Environment.get_variable ("DESKTOP_SESSION");
-    if (session_var == null)
-    {
-      // let's assume it's gnome
-      DesktopAppInfo.set_desktop_env ("GNOME");
-      return;
-    }
-
-    string desktop_session = session_var.up ();
-    if (desktop_session.has_prefix ("GNOME"))
-    {
-      DesktopAppInfo.set_desktop_env ("GNOME");
-    }
-    else if (desktop_session.has_prefix ("KDE"))
-    {
-      DesktopAppInfo.set_desktop_env ("KDE");
-    }
-    else if (desktop_session.has_prefix ("XFCE"))
-    {
-      DesktopAppInfo.set_desktop_env ("XFCE");
-    }
-    else
-    {
-      // assume GNOME
-      DesktopAppInfo.set_desktop_env ("GNOME");
-    }
-
-    foreach (unowned string data_dir in Environment.get_system_data_dirs ())
-    {
-      prefixes += Path.build_path (Path.DIR_SEPARATOR_S,
-                                   data_dir,
-                                   "applications",
-                                   Path.DIR_SEPARATOR_S, null);
     }
   }
 
@@ -144,8 +107,8 @@ public class DesktopLaunchListener : DataProvider
     HashTable<string, Variant> extra_params = (HashTable<string, Variant>) dict;
 
     DesktopAppInfo? dai;
-    string launched_uri = get_uri_for_desktop_file (desktop_file,
-                                                    out dai);
+    string launched_uri = Utils.get_actor_for_desktop_file (desktop_file,
+                                                            out dai);
     if (launched_uri == null)
     {
       warning ("Unable to open desktop file '%s'", desktop_file);
@@ -156,7 +119,7 @@ public class DesktopLaunchListener : DataProvider
     unowned Variant origin_df = extra_params.lookup ("origin-desktop-file");
     if (origin_df != null)
     {
-      launcher_uri = get_uri_for_desktop_file (origin_df.get_bytestring ());
+      launcher_uri = Utils.get_actor_for_desktop_file (origin_df.get_bytestring ());
     }
     else
     {
@@ -194,50 +157,6 @@ public class DesktopLaunchListener : DataProvider
     arr.add (event);
 
     items_available (arr);
-  }
-
-  /*
-   * Takes a path to a .desktop file and returns the Desktop ID for it.
-   * This isn't simply the basename, but may contain part of the path;
-   * eg. kde4-kate.desktop for /usr/share/applications/kde4/kate.desktop.
-   * */
-  private string extract_desktop_id (string path)
-  {
-    if (!path.has_prefix ("/"))
-      return path;
-
-    foreach (unowned string prefix in prefixes)
-    {
-      string without_prefix = path.substring (prefix.length);
-
-      if (Path.DIR_SEPARATOR_S in without_prefix)
-        return without_prefix.replace (Path.DIR_SEPARATOR_S, "-");
-
-      return without_prefix;
-    }
-
-    return Path.get_basename (path);
-  }
-
-  private string? get_uri_for_desktop_file (string desktop_file,
-                                            out DesktopAppInfo dai = null)
-  {
-    if (Path.is_absolute (desktop_file))
-    {
-      dai = new DesktopAppInfo.from_filename (desktop_file);
-    }
-    else
-    {
-      dai = new DesktopAppInfo (desktop_file);
-    }
-
-    if (dai == null)
-    {
-      return null;
-    }
-
-    string desktop_id = dai.get_id () ?? extract_desktop_id (dai.get_filename ());
-    return "application://%s".printf (desktop_id);
   }
 
   public override void stop ()

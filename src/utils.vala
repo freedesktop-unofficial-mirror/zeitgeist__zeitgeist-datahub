@@ -27,6 +27,7 @@ using Zeitgeist;
 public class Utils : Object
 {
   private static HashTable<string, string> app_to_desktop_file = null;
+  private static string[] desktop_file_prefixes = null;
 
   // FIXME: Do we want to make this async?
   // FIXME: this can throw GLib.Error, but if we use try/catch or throws
@@ -55,22 +56,129 @@ public class Utils : Object
     return (timeval.tv_sec * 1000) + (timeval.tv_usec / 1000);
   }
 
-  private static void init ()
+  /*
+   * Configures DesktopAppInfo and initializes the list of places where we
+   *  may find .desktop files.
+   */
+  private static void init_desktop_id ()
+  {
+    if (desktop_file_prefixes != null)
+      return;
+
+    unowned string session_var = Environment.get_variable ("DESKTOP_SESSION");
+    if (session_var == null)
+    {
+      // let's assume it's gnome
+      DesktopAppInfo.set_desktop_env ("GNOME");
+      return;
+    }
+
+    string desktop_session = session_var.up ();
+    if (desktop_session.has_prefix ("GNOME"))
+    {
+      DesktopAppInfo.set_desktop_env ("GNOME");
+    }
+    else if (desktop_session.has_prefix ("KDE"))
+    {
+      DesktopAppInfo.set_desktop_env ("KDE");
+    }
+    else if (desktop_session.has_prefix ("XFCE"))
+    {
+      DesktopAppInfo.set_desktop_env ("XFCE");
+    }
+    else
+    {
+      // assume GNOME
+      DesktopAppInfo.set_desktop_env ("GNOME");
+    }
+
+    foreach (unowned string data_dir in Environment.get_system_data_dirs ())
+    {
+      desktop_file_prefixes += Path.build_path (Path.DIR_SEPARATOR_S,
+                                                data_dir,
+                                                "applications",
+                                                Path.DIR_SEPARATOR_S, null);
+    }
+  }
+
+  /*
+   * Takes a path to a .desktop file and returns the Desktop ID for it.
+   * This isn't simply the basename, but may contain part of the path;
+   * eg. kde4-kate.desktop for /usr/share/applications/kde4/kate.desktop.
+   * */
+  private static string extract_desktop_id (string path)
+  {
+    if (!path.has_prefix ("/"))
+      return path;
+
+    foreach (unowned string prefix in desktop_file_prefixes)
+    {
+      string without_prefix = path.substring (prefix.length);
+
+      if (Path.DIR_SEPARATOR_S in without_prefix)
+        return without_prefix.replace (Path.DIR_SEPARATOR_S, "-");
+
+      return without_prefix;
+    }
+
+    return Path.get_basename (path);
+  }
+
+  /*
+   * Takes the basename of a .desktop and returns the Zeitgeist actor for it.
+   */
+  public static string? get_actor_for_desktop_file (string desktop_file,
+                                            out DesktopAppInfo dai = null)
+  {
+    init_desktop_id ();
+
+    if (Path.is_absolute (desktop_file))
+    {
+      dai = new DesktopAppInfo.from_filename (desktop_file);
+    }
+    else
+    {
+      dai = new DesktopAppInfo (desktop_file);
+    }
+
+    if (dai == null)
+    {
+      return null;
+    }
+
+    string desktop_id = dai.get_id () ?? extract_desktop_id (dai.get_filename ());
+    return "application://%s".printf (desktop_id);
+  }
+
+  /*
+   * Initialize the cache mapping application names (from GtkRecentManager)
+   * to Desktop IDs.
+   * */
+  private static void init_application_cache ()
   {
     if (unlikely (app_to_desktop_file == null))
       app_to_desktop_file = new HashTable<string, string> (str_hash, str_equal);
   }
 
+  /*
+   * Workaround for OpenOffice.org/LibreOffice.
+   * */
   public static string? get_ooo_desktop_file_for_mimetype (string mimetype)
   {
     return find_desktop_file_for_app ("libreoffice", mimetype) ??
       find_desktop_file_for_app ("ooffice", mimetype);
   }
 
+  /*
+   * Takes an application name (from GtkRecentManager) and finds
+   * a .desktop file that launches the given application.
+   *
+   * It returns the complete path to the .desktop file.
+   */
   public static string? find_desktop_file_for_app (string app_name,
                                                    string? mimetype = null)
   {
-    init ();
+    init_application_cache ();
 
     string hash_name = mimetype != null ?
       "%s::%s".printf (app_name, mimetype) : app_name;

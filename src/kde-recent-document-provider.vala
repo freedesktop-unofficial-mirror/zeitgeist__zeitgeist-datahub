@@ -154,7 +154,12 @@ public class RecentDocumentsKDE : DataProvider
     // only uses $HOME.
     uri = url_regex.replace (uri, uri.length, 0, Environment.get_home_dir ());
 
-    string actor = "application://%s.desktop".printf (desktop_entry_name);
+    string? actor = get_actor_for_desktop_entry_name (desktop_entry_name);
+    if (actor == null)
+    {
+        warning ("Couldn't find actor for '%s'.", desktop_entry_name);
+        return null;
+    }
     if (actor in ignored_actors)
       return null;
 
@@ -201,7 +206,29 @@ public class RecentDocumentsKDE : DataProvider
     return event;
   }
 
-  protected async void crawl_all_items () throws GLib.FileError
+  private string? get_actor_for_desktop_entry_name (string desktop_entry_name)
+  {
+      const string desktop_prefixes[] = { "", "kde-", "kde4-" };
+
+      DesktopAppInfo dae = null;
+      string desktop_id = null;
+      foreach (unowned string prefix in desktop_prefixes)
+      {
+          desktop_id = "%s%s.desktop".printf (prefix, desktop_entry_name);
+          dae = new DesktopAppInfo (desktop_id);
+          if (dae != null)
+            break;
+      }
+
+      if (dae != null)
+      {
+          return "application://%s".printf (desktop_id);
+      }
+
+      return null;
+  }
+
+  private async void crawl_all_items () throws GLib.FileError
   {
     string filename;
     GenericArray<Event> events = new GenericArray<Event> ();
