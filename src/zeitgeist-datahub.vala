@@ -111,6 +111,7 @@ public class DataHub : Object, DataHubService
     */
     providers.prepend (new RecentManagerGtk (this));
     providers.prepend (new RecentDocumentsKDE (this));
+    providers.prepend (new DownloadsDirectoryMonitor (this));
 
     if (GLibExtra.check_version (2, 28, 0))
     {
