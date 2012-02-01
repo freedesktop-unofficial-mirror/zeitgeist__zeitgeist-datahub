@@ -135,7 +135,7 @@ public class RecentDocumentsKDE : DataProvider
       return null;
 
     recent_info.get_modification_time (out timeval);
-    int64 event_time = Utils.timeval_to_timestamp (timeval);
+    int64 event_time = Timestamp.from_timeval (timeval);
 
     string? content = Utils.get_file_contents (file);
     if (content == null)
@@ -168,13 +168,13 @@ public class RecentDocumentsKDE : DataProvider
       FILE_ATTRIBUTE_QUERY_SUBJECT, GLib.FileQueryInfoFlags.NONE);
 
     subject_info.get_modification_time (out timeval);
-    int64 modification_time = Utils.timeval_to_timestamp (timeval);
+    int64 modification_time = Timestamp.from_timeval (timeval);
 
     timeval.tv_sec = (long) subject_info.get_attribute_uint64 (
       GLib.FILE_ATTRIBUTE_TIME_CHANGED);
     timeval.tv_usec = subject_info.get_attribute_uint32 (
       GLib.FILE_ATTRIBUTE_TIME_CHANGED_USEC);
-    int64 creation_time = Utils.timeval_to_timestamp (timeval);
+    int64 creation_time = Timestamp.from_timeval (timeval);
 
     string mimetype = subject_info.get_attribute_string (
       FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE);
@@ -228,16 +228,18 @@ public class RecentDocumentsKDE : DataProvider
       return null;
   }
 
-  private async void crawl_all_items () throws GLib.FileError
+  private async void crawl_all_items () throws GLib.Error
   {
-    string filename;
     GenericArray<Event> events = new GenericArray<Event> ();
 
-    GLib.Dir directory = GLib.Dir.open (recent_document_path);
-    while ((filename = directory.read_name ()) != null)
+    GLib.File directory = GLib.File.new_for_path (recent_document_path);
+    GLib.FileEnumerator enumerator = directory.enumerate_children (
+      FILE_ATTRIBUTE_STANDARD_NAME, GLib.FileQueryInfoFlags.NONE);
+    GLib.FileInfo fi;
+    while ((fi = enumerator.next_file ()) != null)
     {
-      var file = GLib.File.new_for_path (
-        recent_document_path + "/" + filename);
+      string path = Path.build_filename (recent_document_path, fi.get_name ());
+      var file = GLib.File.new_for_path (path);
       try
       {
         Event? event = yield parse_file (file);
@@ -249,6 +251,7 @@ public class RecentDocumentsKDE : DataProvider
         // Silently ignore. The files may be gone by now - who cares?
       }
     }
+    enumerator.close ();
 
     // Zeitgeist will take care of ignoring the duplicates
     items_available (events);

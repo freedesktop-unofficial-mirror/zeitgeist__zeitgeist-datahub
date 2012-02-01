@@ -28,6 +28,7 @@ public class Utils : Object
 {
   private static HashTable<string, string> app_to_desktop_file = null;
   private static string[] desktop_file_prefixes = null;
+  private static GLib.Regex duplicate_path_separator_regex;
 
   // FIXME: Do we want to make this async?
   // FIXME: this can throw GLib.Error, but if we use try/catch or throws
@@ -44,16 +45,7 @@ public class Utils : Object
     if (!file.load_contents (null, out contents, null, null))
       return null;
 #endif
-    return (owned) contents;
-  }
-
-  /*
-   * Takes a TimeVal and returns a Zeitgeist timestamp (ie. timestamp in msec).
-   *
-   * */
-  public static int64 timeval_to_timestamp (TimeVal timeval)
-  {
-    return (timeval.tv_sec * 1000) + (timeval.tv_usec / 1000);
+    return contents;
   }
 
   /*
@@ -65,12 +57,20 @@ public class Utils : Object
     if (desktop_file_prefixes != null)
       return;
 
-    unowned string session_var = Environment.get_variable ("DESKTOP_SESSION");
+	duplicate_path_separator_regex = new Regex ("//");
+
+    unowned string session_var;
+
+    session_var = Environment.get_variable ("XDG_CURRENT_DESKTOP");
     if (session_var == null)
     {
-      // let's assume it's gnome
-      DesktopAppInfo.set_desktop_env ("GNOME");
-      return;
+      session_var = Environment.get_variable ("DESKTOP_SESSION");
+      if (session_var == null)
+      {
+        // let's assume it's gnome
+        DesktopAppInfo.set_desktop_env ("GNOME");
+        return;
+      }
     }
 
     string desktop_session = session_var.up ();
@@ -105,11 +105,17 @@ public class Utils : Object
    * Takes a path to a .desktop file and returns the Desktop ID for it.
    * This isn't simply the basename, but may contain part of the path;
    * eg. kde4-kate.desktop for /usr/share/applications/kde4/kate.desktop.
+   *
+   * Warning: init_desktop_id () must be called before this function can
+   *          be used.
    * */
   private static string extract_desktop_id (string path)
   {
     if (!path.has_prefix ("/"))
       return path;
+
+    string normalized_path = duplicate_path_separator_regex.replace (
+      path, path.length, 0, "/");
 
     foreach (unowned string prefix in desktop_file_prefixes)
     {
