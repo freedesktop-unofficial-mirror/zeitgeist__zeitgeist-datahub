@@ -28,7 +28,6 @@ public class Utils : Object
 {
   private static HashTable<string, string> app_to_desktop_file = null;
   private static string[] desktop_file_prefixes = null;
-  private static GLib.Regex duplicate_path_separator_regex;
 
   // FIXME: Do we want to make this async?
   // FIXME: this can throw GLib.Error, but if we use try/catch or throws
@@ -56,8 +55,6 @@ public class Utils : Object
   {
     if (desktop_file_prefixes != null)
       return;
-
-	duplicate_path_separator_regex = new Regex ("//");
 
     unowned string session_var;
 
@@ -105,17 +102,13 @@ public class Utils : Object
    * Takes a path to a .desktop file and returns the Desktop ID for it.
    * This isn't simply the basename, but may contain part of the path;
    * eg. kde4-kate.desktop for /usr/share/applications/kde4/kate.desktop.
-   *
-   * Warning: init_desktop_id () must be called before this function can
-   *          be used.
    * */
   private static string extract_desktop_id (string path)
   {
     if (!path.has_prefix ("/"))
       return path;
 
-    string normalized_path = duplicate_path_separator_regex.replace (
-      path, path.length, 0, "/");
+    string normalized_path = path.replace ("//", "/");
 
     foreach (unowned string prefix in desktop_file_prefixes)
     {
