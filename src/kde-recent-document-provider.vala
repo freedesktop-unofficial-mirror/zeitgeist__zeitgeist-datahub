@@ -238,8 +238,7 @@ public class RecentDocumentsKDE : DataProvider
     GLib.FileInfo fi;
     while ((fi = enumerator.next_file ()) != null)
     {
-      string path = Path.build_filename (recent_document_path, fi.get_name ());
-      var file = GLib.File.new_for_path (path);
+      var file = directory.get_child (fi.get_name ());
       try
       {
         Event? event = yield parse_file (file);

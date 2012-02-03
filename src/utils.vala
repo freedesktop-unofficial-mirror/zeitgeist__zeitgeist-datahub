@@ -59,34 +59,39 @@ public class Utils : Object
     unowned string session_var;
 
     session_var = Environment.get_variable ("XDG_CURRENT_DESKTOP");
-    if (session_var == null)
+    if (session_var != null)
+    {
+        DesktopAppInfo.set_desktop_env (session_var);
+    }
+    else
     {
       session_var = Environment.get_variable ("DESKTOP_SESSION");
       if (session_var == null)
       {
-        // let's assume it's gnome
+        // let's assume it's GNOME
         DesktopAppInfo.set_desktop_env ("GNOME");
-        return;
       }
-    }
-
-    string desktop_session = session_var.up ();
-    if (desktop_session.has_prefix ("GNOME"))
-    {
-      DesktopAppInfo.set_desktop_env ("GNOME");
-    }
-    else if (desktop_session.has_prefix ("KDE"))
-    {
-      DesktopAppInfo.set_desktop_env ("KDE");
-    }
-    else if (desktop_session.has_prefix ("XFCE"))
-    {
-      DesktopAppInfo.set_desktop_env ("XFCE");
-    }
-    else
-    {
-      // assume GNOME
-      DesktopAppInfo.set_desktop_env ("GNOME");
+      else
+      {
+        string desktop_session = session_var.up ();
+        if (desktop_session.has_prefix ("GNOME"))
+        {
+          DesktopAppInfo.set_desktop_env ("GNOME");
+        }
+        else if (desktop_session.has_prefix ("KDE"))
+        {
+          DesktopAppInfo.set_desktop_env ("KDE");
+        }
+        else if (desktop_session.has_prefix ("XFCE"))
+        {
+          DesktopAppInfo.set_desktop_env ("XFCE");
+        }
+        else
+        {
+          // assume GNOME
+          DesktopAppInfo.set_desktop_env ("GNOME");
+        }
+      }
     }
 
     foreach (unowned string data_dir in Environment.get_system_data_dirs ())
@@ -112,12 +117,15 @@ public class Utils : Object
 
     foreach (unowned string prefix in desktop_file_prefixes)
     {
-      string without_prefix = path.substring (prefix.length);
+      if (normalized_path.has_prefix (prefix))
+      {
+        string without_prefix = normalized_path.substring (prefix.length);
 
-      if (Path.DIR_SEPARATOR_S in without_prefix)
-        return without_prefix.replace (Path.DIR_SEPARATOR_S, "-");
+        if (Path.DIR_SEPARATOR_S in without_prefix)
+          return without_prefix.replace (Path.DIR_SEPARATOR_S, "-");
 
-      return without_prefix;
+        return without_prefix;
+      }
     }
 
     return Path.get_basename (path);
