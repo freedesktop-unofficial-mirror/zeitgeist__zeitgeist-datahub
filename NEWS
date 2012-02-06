@@ -2,8 +2,16 @@ Zeitgeist-datahub 0.8.0
 =======================
 
 * Make sure correct desktop environment is set for DesktopAppInfo (Michal Hruby)
-* Fix recent-manager-provider to log remote files (Siegfried Gevatter) 
-* Log events from KDE Recent Document (Siegfried Gevatter)
+
+* Fixed recent-manager-provider to log remote files (Siegfried Gevatter)
+
+* Fixed Desktop ID extraction to take into account subdirectories
+  of AppDir (Siegfried Gevatter)
+
+* Added a KDE Recent Document provider (Siegfried Gevatter)
+
+* Added a provider that looks for new files in the XDG Download
+  Directory (Siegfried Gevatter)
 
 Zeitgeist-datahub 0.7.0
 =======================
