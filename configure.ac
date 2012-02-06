@@ -44,6 +44,8 @@ AC_ARG_ENABLE([downloads-monitor],
     [
         if test "x$enableval" != "xno"; then
             with_downloads_monitor=yes
+        else
+            with_downloads_monitor=no
         fi
     ],
     [with_downloads_monitor=yes])
@@ -92,5 +94,8 @@ ${PACKAGE}-${VERSION}
 
   Build Environment
     Install Prefix:     ${prefix}
+
+  Optional Providers
+    Downloads Directory Monitor: ${with_downloads_monitor}
 
 EOF
