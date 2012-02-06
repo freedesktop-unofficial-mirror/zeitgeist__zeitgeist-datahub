@@ -36,6 +36,28 @@ AM_PROG_VALAC([0.11.2])
 AM_SILENT_RULES([yes])
 
 dnl ==============================================
+dnl Check settings for optional providers
+AC_ARG_ENABLE([downloads-monitor],
+    AS_HELP_STRING([--disable-downloads-monitor],
+        [Disables the XDG_DOWNLOAD_DIRECTORY file monitor]
+    ),
+    [
+        if test "x$enableval" != "xno"; then
+            with_downloads_monitor=yes
+        fi
+    ],
+    [with_downloads_monitor=yes])
+
+AM_CONDITIONAL(DOWNLOADS_MONITOR_ENABLED, test "x$with_downloads_monitor" = "xyes")
+
+if test "x$with_downloads_monitor" = "xyes"; then
+    AC_DEFINE([DOWNLOADS_MONITOR_ENABLED], [1], [Is the XDG_DOWNLOAD_DIRECTORY file monitor enabled?])
+else
+    AC_DEFINE([DOWNLOADS_MONITOR_ENABLED], [0], [Is the XDG_DOWNLOAD_DIRECTORY file monitor enabled?])
+fi
+dnl ==============================================
+
+dnl ==============================================
 dnl Check that we meet the dependencies
 dnl ==============================================
 MIN_GLIB_VERSION=2.26.0
