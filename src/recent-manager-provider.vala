@@ -116,6 +116,13 @@ public class RecentManagerGtk : DataProvider
       else
       {
         desktop_file = Utils.find_desktop_file_for_app (exec[0]);
+
+        // Thunderbird also likes doing funny stuff...
+        if (desktop_file == null && exec[0].has_suffix ("-bin"))
+        {
+          desktop_file = Utils.find_desktop_file_for_app (
+            exec[0].substring(0, exec[0].length - 4));
+        }
       }
 
       if (desktop_file == null)
