@@ -2,6 +2,7 @@
  * Zeitgeist
  *
  * Copyright (C) 2010 Michal Hruby <michal.mhr@gmail.com>
+ * Copyright (C) 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,6 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Michal Hruby <michal.mhr@gmail.com>
+ * Authored by Siegfried-A. Gevatter <siegfried.gevatter@collabora.co.uk>
  *
  */
 
@@ -88,7 +90,7 @@ public class RecentManagerGtk : DataProvider
       unowned string uri = ri.get_uri ();
       if (ri.get_private_hint () || uri.has_prefix ("file:///tmp/"))
         continue;
-      if (uri.has_prefix ("file://") && !ri.exists ())
+      if (ri.is_local () && !ri.exists ())
         continue;
 
       var last_app = ri.last_application ().strip ();
@@ -142,42 +144,72 @@ public class RecentManagerGtk : DataProvider
       Event event;
       int64 timestamp;
 
-      // zeitgeist checks for duplicated events, so we can do this
-      event = new Event.full (ZG_CREATE_EVENT,
-                              ZG_USER_ACTIVITY,
-                              actor,
-                              subject, null);
-      timestamp = ri.get_added ();
-      timestamp *= 1000;
-      event.set_timestamp (timestamp);
-      if (timestamp > last_timestamp && timestamp >= 0)
+      // Zeitgeist checks for duplicated events, so we can just inserted
+      // all events every time.
+      bool log_create = true;
+      bool log_modify = true;
+      bool log_access = true;
+
+      // However, we don't really want duplicate events with the same
+      // timestamp but different interpretations...
+      if (ri.get_added () == ri.get_modified ())
       {
-        events.add ((owned) event);
+        // Creation also changes modified (and visited). If they are the
+        // same, we only log the former.
+        log_modify = false;
+      }
+      if (ri.get_modified () == ri.get_visited ())
+      {
+        // Modification also updated visited. If they are the same, we
+        // only log the former.
+        log_access = false;
       }
 
-      event = new Event.full (ZG_MODIFY_EVENT,
-                              ZG_USER_ACTIVITY,
-                              actor,
-                              subject, null);
-      timestamp = ri.get_modified ();
-      timestamp *= 1000;
-      event.set_timestamp (timestamp);
-      if (timestamp > last_timestamp && timestamp >= 0)
+      if (log_create)
       {
-        events.add ((owned) event);
+        event = new Event.full (ZG_CREATE_EVENT,
+                                ZG_USER_ACTIVITY,
+                                actor,
+                                subject, null);
+        timestamp = ri.get_added ();
+        timestamp *= 1000;
+        event.set_timestamp (timestamp);
+        if (timestamp > last_timestamp && timestamp >= 0)
+        {
+          events.add ((owned) event);
+        }
       }
 
-      event = new Event.full (ZG_ACCESS_EVENT,
-                              ZG_USER_ACTIVITY,
-                              actor,
-                              subject, null);
-      timestamp = ri.get_visited ();
-      timestamp *= 1000;
-      event.set_timestamp (timestamp);
-      if (timestamp > last_timestamp && timestamp >= 0)
+      if (log_modify)
       {
-        events.add ((owned) event);
+        event = new Event.full (ZG_MODIFY_EVENT,
+                                ZG_USER_ACTIVITY,
+                                actor,
+                                subject, null);
+        timestamp = ri.get_modified ();
+        timestamp *= 1000;
+        event.set_timestamp (timestamp);
+        if (timestamp > last_timestamp && timestamp >= 0)
+        {
+          events.add ((owned) event);
+        }
       }
+
+      if (log_access)
+      {
+        event = new Event.full (ZG_ACCESS_EVENT,
+                                ZG_USER_ACTIVITY,
+                                actor,
+                                subject, null);
+        timestamp = ri.get_visited ();
+        timestamp *= 1000;
+        event.set_timestamp (timestamp);
+        if (timestamp > last_timestamp && timestamp >= 0)
+        {
+          events.add ((owned) event);
+        }
+      }
+
     }
 
     last_timestamp = signal_time;
