@@ -87,7 +87,10 @@ public class RecentManagerGtk : DataProvider
 
     foreach (Gtk.RecentInfo ri in recent_manager.get_items ())
     {
-      unowned string uri = ri.get_uri ();
+      // GFile and GtkRecentInfo use different encoding of the uris, so we'll
+      // do this
+      File file_obj = File.new_for_uri (ri.get_uri ());
+      string uri = file_obj.get_uri ();
       if (ri.get_private_hint () || uri.has_prefix ("file:///tmp/"))
         continue;
       if (ri.is_local () && !ri.exists ())
@@ -138,11 +141,13 @@ public class RecentManagerGtk : DataProvider
         continue;
       }
 
-      string origin = Path.get_dirname (ri.get_uri ());
+      var parent_file = file_obj.get_parent ();
+      string origin = parent_file != null ?
+        parent_file.get_uri () : Path.get_dirname (uri);
       var subject =
-        new Subject.full (ri.get_uri (),
+        new Subject.full (uri,
                           interpretation_for_mimetype (ri.get_mime_type ()),
-                          manifestation_for_uri (ri.get_uri ()),
+                          manifestation_for_uri (uri),
                           ri.get_mime_type (),
                           origin,
                           ri.get_display_name (),
