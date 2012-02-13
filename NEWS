@@ -1,3 +1,13 @@
+Zeitgeist-datahub 0.8.2
+=======================
+
+* Avoid triplication of events when logging items from GtkRecentManager
+  (Siegfried Gevatter)
+
+* Fix wrong desktop-file detection for Thunderbird (Siegfried Gevatter)
+
+* Sanitize uri encoding when logging items from GtkRecentManager (Michal Hruby)
+
 Zeitgeist-datahub 0.8.0
 =======================
 
