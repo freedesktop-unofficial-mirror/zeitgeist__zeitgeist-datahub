@@ -90,6 +90,10 @@ public class DownloadsDirectoryMonitor : DataProvider
       return;
     }
 
+    // Skip temporary files (eg. in-progress Downloads)
+    if (file.get_uri ().has_suffix (".part"))
+      return;
+
     GLib.FileInfo subject_info;
     try
     {

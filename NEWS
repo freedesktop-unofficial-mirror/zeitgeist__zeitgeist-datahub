@@ -1,4 +1,9 @@
-Zeitgeist-datahub 0.8.2
+Zeitgeist-datahub 0.8.X
+=======================
+
+* Download monitor: don't log *.part files (Siegfried Gevatter)
+
+Zeitgeist-datahub 0.8.1
 =======================
 
 * Avoid triplication of events when logging items from GtkRecentManager
