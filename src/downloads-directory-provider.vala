@@ -91,7 +91,8 @@ public class DownloadsDirectoryMonitor : DataProvider
     }
 
     // Skip temporary files (eg. in-progress Downloads)
-    if (file.get_uri ().has_suffix (".part"))
+    string uri = file.get_uri ();
+    if (uri.has_suffix (".part") || uri.has_suffix (".crdownload"))
       return;
 
     GLib.FileInfo subject_info;
@@ -106,7 +107,6 @@ public class DownloadsDirectoryMonitor : DataProvider
       return;
     }
 
-    string uri = file.get_uri ();
     string mimetype = subject_info.get_attribute_string (
       FILE_ATTRIBUTE_STANDARD_FAST_CONTENT_TYPE);
     string origin = Path.get_dirname (uri);
