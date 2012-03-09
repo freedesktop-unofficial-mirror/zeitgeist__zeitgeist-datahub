@@ -78,6 +78,11 @@ public class DownloadsDirectoryMonitor : DataProvider
     }
   }
 
+  private const string ATTRIBUTES =
+    FILE_ATTRIBUTE_STANDARD_FAST_CONTENT_TYPE + "," +
+    FILE_ATTRIBUTE_STANDARD_IS_HIDDEN + "," +
+    FILE_ATTRIBUTE_STANDARD_IS_BACKUP + ",";
+
   private async void process_event (GLib.File file, GLib.File? other_file,
     GLib.FileMonitorEvent event_type)
   {
@@ -98,8 +103,10 @@ public class DownloadsDirectoryMonitor : DataProvider
     GLib.FileInfo subject_info;
     try
     {
-      subject_info = yield file.query_info_async (
-        FILE_ATTRIBUTE_STANDARD_FAST_CONTENT_TYPE, GLib.FileQueryInfoFlags.NONE);
+      subject_info = yield file.query_info_async (ATTRIBUTES,
+                                                  GLib.FileQueryInfoFlags.NONE);
+      if (subject_info.get_is_hidden () || subject_info.get_is_backup ())
+        return;
     }
     catch (GLib.Error err)
     {
