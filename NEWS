@@ -1,7 +1,9 @@
-Zeitgeist-datahub 0.8.X
+Zeitgeist-datahub 0.8.2
 =======================
 
 * Download monitor: don't log *.part files (Siegfried Gevatter)
+
+* Download monitor: ignore hidden and backup files
 
 Zeitgeist-datahub 0.8.1
 =======================
