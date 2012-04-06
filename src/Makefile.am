@@ -39,4 +39,5 @@ xdgautostart_DATA = $(xdgautostart_in_files:.desktop.in=.desktop)
 CLEANFILES = zeitgeist-datahub.desktop
 
 EXTRA_DIST = \
+	glib-extra.vapi \
 	$(xdgautostart_in_files)
