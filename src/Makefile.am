@@ -1,11 +1,14 @@
 AM_CPPFLAGS = \
 	-include $(CONFIG_HEADER) \
+	$(pkg_check_modules) \
 	$(NULL)
 
 VALAFLAGS = \
 	--pkg gio-2.0 \
 	--pkg gio-unix-2.0 \
 	--pkg gtk+-2.0 \
+	--pkg json-glib-1.0 \
+	--pkg telepathy-glib \
 	--pkg zeitgeist-1.0 \
 	glib-extra.vapi \
 	$(top_srcdir)/config.vapi \
@@ -23,6 +26,7 @@ zeitgeist_datahub_SOURCES = \
 	downloads-directory-provider.vala \
 	kde-recent-document-provider.vala \
 	recent-manager-provider.vala \
+	telepathy-observer.vala \
 	utils.vala \
 	zeitgeist-datahub.vala \
 	$(optional_zeitgeist_datahub_SOURCES) \
