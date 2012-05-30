@@ -134,7 +134,7 @@ public class RecentDocumentsKDE : DataProvider
     if (file_type != GLib.FileType.REGULAR)
       return null;
 
-    recent_info.get_modification_time (out timeval);
+    timeval = recent_info.get_modification_time ();
     int64 event_time = Timestamp.from_timeval (timeval);
 
     string? content = Utils.get_file_contents (file);
@@ -167,7 +167,7 @@ public class RecentDocumentsKDE : DataProvider
     var subject_info = subject_file.query_info (
       FILE_ATTRIBUTE_QUERY_SUBJECT, GLib.FileQueryInfoFlags.NONE);
 
-    subject_info.get_modification_time (out timeval);
+    timeval = subject_info.get_modification_time ();
     int64 modification_time = Timestamp.from_timeval (timeval);
 
     timeval.tv_sec = (long) subject_info.get_attribute_uint64 (
