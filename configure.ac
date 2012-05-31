@@ -31,7 +31,7 @@ AC_STDC_HEADERS
 dnl ==============================================
 dnl Check for vala
 dnl ==============================================
-AM_PROG_VALAC([0.11.2])
+AM_PROG_VALAC([0.16.0])
 
 AM_SILENT_RULES([yes])
 
@@ -64,7 +64,7 @@ dnl Check that we meet the dependencies
 dnl ==============================================
 MIN_GLIB_VERSION=2.26.0
 MIN_GTK_VERSION=2.16.0
-MIN_ZEITGEIST_VERSION=0.3.3
+MIN_ZEITGEIST_VERSION=0.9.0
 MIN_TP_GLIB_VERSION=0.18.0
 MIN_JSON_GLIB_VERSION=0.14.2
 
