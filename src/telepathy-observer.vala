@@ -18,7 +18,6 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *
  */
 
 using Zeitgeist;
@@ -32,26 +31,24 @@ public class TelepathyObserver : DataProvider
   private const string tp_account_path = "x-telepathy-account-path:%s";
   private const string tp_identifier = "x-telepathy-identifier:%s";
   private const string ft_json_domain = "http://zeitgeist-project.com/1.0/telepathy/filetransfer";
+  private const string call_json_domain = "http://zeitgeist-project.com/1.0/telepathy/call";
 
   private TelepathyGLib.DBusDaemon dbus = null;
   private TelepathyGLib.AutomaticClientFactory factory = null;
   private TelepathyGLib.SimpleObserver observer = null;
-  private HashTable<Channel, Timer> call_timers = null;
+  private HashTable<string, Timer> call_timers = null;
 
   public TelepathyObserver (DataHub datahub) throws GLib.Error
   {
-    stdout.printf ("===== SET UP =====\n");
     GLib.Object (unique_id: "com.zeitgeist-project,datahub,telepathy-observer",
                  name: "Telepathy Observer",
                  description: "Logs IM, call and filetransfer from telepathy",
                  datahub: datahub);
-    
   }
   
   construct
-  { 
-    stdout.printf ("===== SET UP =====\n");
-    call_timers = new HashTable<Channel, Timer> (str_hash, str_equal);
+  {
+    call_timers = new HashTable<string, Timer> (str_hash, str_equal);
     dbus = TelepathyGLib.DBusDaemon.dup ();
     factory = new TelepathyGLib.AutomaticClientFactory (dbus);
 
@@ -72,9 +69,9 @@ public class TelepathyObserver : DataProvider
   public override bool enabled { get; set; default = true; }
   public override bool register { get; construct set; default = true; }
 
-  private void print_event (Event event)
+  private void push_event (Event event)
   {
-    stdout.printf("Event:\n");
+    /*stdout.printf("Event:\n");
     stdout.printf("    - timestamp:%s\n", (string)event.get_timestamp ());
     stdout.printf("    - actor:%s\n", event.get_actor ());
     stdout.printf("    - interpretation:%s\n", event.get_interpretation ());
@@ -95,6 +92,10 @@ public class TelepathyObserver : DataProvider
     }
     if (event.get_payload() != null)
       stdout.printf("    - payload:%s\n", (string) event.get_payload().data);
+    */
+    GenericArray<Event> events = new GenericArray<Event> ();
+    events.add (event);
+    items_available (events);
   }
 
   private Event create_text_event (Account account, Channel channel)
@@ -148,7 +149,7 @@ public class TelepathyObserver : DataProvider
     if (target != null)
     {
       var event_template = this.create_text_event (account, channel);
-      this.print_event (event_template);
+      this.push_event (event_template);
       foreach (var message in channel.get_pending_messages ())
       {
         if (!message.is_delivery_report ())
@@ -156,25 +157,25 @@ public class TelepathyObserver : DataProvider
           event_template = this.create_text_event (account, channel);
           event_template.set_interpretation (ZG_RECEIVE_EVENT);
           event_template.set_manifestation (ZG_WORLD_ACTIVITY);
-          this.print_event (event_template);
+          this.push_event (event_template);
         }
       }
       channel.invalidated.connect (() => {
         event_template = this.create_text_event (account, channel);
         event_template.set_interpretation (ZG_LEAVE_EVENT);
-        this.print_event (event_template);
+        this.push_event (event_template);
       });
       channel.message_received.connect (() => {
         event_template = this.create_text_event (account, channel);
         event_template.set_interpretation (ZG_RECEIVE_EVENT);
         event_template.set_manifestation (ZG_WORLD_ACTIVITY);
-        this.print_event (event_template);
+        this.push_event (event_template);
       });
       channel.message_sent.connect (() => {
         event_template = this.create_text_event (account, channel);
         event_template.set_interpretation (ZG_SEND_EVENT);
         event_template.set_manifestation (ZG_USER_ACTIVITY);
-        this.print_event (event_template);
+        this.push_event (event_template);
       });
     }
   }
@@ -234,33 +235,31 @@ public class TelepathyObserver : DataProvider
                                      List<ChannelRequest> requests,
                                      ObserveChannelsContext context)
   {
-    stdout.printf ("======================= CALL CHANNEL =======================\n");
     CallChannel channel = (CallChannel) b_channel;
-    if (channel.state == TelepathyGLib.CallState.INITIALISED)
-    {
-      var event_template = this.create_call_event (account, channel);
-      event_template.set_interpretation (ZG_CREATE_EVENT);
-      if (channel.requested == false)
-        event_template.set_manifestation (ZG_WORLD_ACTIVITY);
-      Timer t = new Timer ();
-      call_timers.set (channel, (owned) t);
-      this.print_event (event_template);
-    }
+   
     channel.state_changed.connect (() => 
       {
         CallFlags flags;
         HashTable<weak void*,weak void*> details;
         TelepathyGLib.CallStateReason reason;
         CallState state = channel.get_state (out flags, out details, out reason);
-        stdout.printf("STATE CHANGED ===> %u\n", state);
-        if ((state == 5 || state ==6))
+
+        var event_template = this.create_call_event (account, channel);
+        if (state == 3)
         {
-          var event_template = this.create_call_event (account, channel);
           event_template.set_interpretation (ZG_CREATE_EVENT);
           if (channel.requested == false)
             event_template.set_manifestation (ZG_WORLD_ACTIVITY);
           Timer t = new Timer ();
-          call_timers.insert (channel, (owned) t);
+          t.stop ();
+          call_timers.insert (channel.get_object_path (), (owned) t);
+          this.push_event (event_template);
+        }
+        else if ((state == 5 || state ==6) && call_timers.contains (channel.get_object_path ()))
+        {
+          event_template.set_interpretation (ZG_CREATE_EVENT);
+          if (channel.requested == false)
+            event_template.set_manifestation (ZG_WORLD_ACTIVITY);
           event_template = this.create_call_event (account, channel);
           if (reason.actor != channel.connection.get_self_handle ())
             event_template.set_manifestation (ZG_WORLD_ACTIVITY);
@@ -268,9 +267,9 @@ public class TelepathyObserver : DataProvider
           if (state == 5)
           {
             event_template.set_interpretation (ZG_ACCESS_EVENT);
-            call_timers.get(b_channel).start();
+            call_timers.lookup (channel.get_object_path ()).start();
+            this.push_event (event_template);
           }
-
           else if (state == 6)
           {
             event_template.set_interpretation (ZG_LEAVE_EVENT);
@@ -278,12 +277,55 @@ public class TelepathyObserver : DataProvider
               event_template.set_interpretation (ZG_DENY_EVENT);
             else if (reason.reason == TelepathyGLib.CallStateChangeReason.NO_ANSWER)
               event_template.set_interpretation (ZG_EXPIRE_EVENT);
-            var duration  = call_timers.get(b_channel).elapsed ();
-            call_timers.lookup (b_channel).stop;
-            call_timers.remove (b_channel);
+            var duration  = call_timers.lookup (channel.get_object_path ()).elapsed ();
+            call_timers.lookup (channel.get_object_path ()).stop;
+            call_timers.remove (channel.get_object_path ());
             //TODO: Add payloads
+            var gen = new Generator();
+            var root = new Json.Node(NodeType.OBJECT);
+            var object = new Json.Object();
+            root.set_object(object);
+            gen.set_root(root);
+            gen.pretty = true;
+
+            var details_obj = new Json.Object ();
+            details_obj.set_int_member ("state", state);
+            details_obj.set_int_member ("reason", reason.reason);
+            details_obj.set_boolean_member ("requested", channel.requested);
+
+            var obj_path = account.get_object_path ();
+            obj_path = this.tp_account_path.printf("%s",
+                     obj_path [TelepathyGLib.ACCOUNT_OBJECT_PATH_BASE.length:
+                     obj_path.length]);
+
+            var targets = "";
+            var i = 0;
+            foreach (var target in channel.get_members ().get_keys())
+            {
+              if (i == 0)
+                targets = "%s".printf (this.tp_identifier.printf (target.get_identifier ()));
+              else 
+                targets = "%s; %s".printf (targets,
+                     this.tp_identifier.printf (target.get_identifier ()));
+              i++;
+            }
+            if (channel.requested == true)
+            {
+              details_obj.set_string_member ("host", obj_path);
+              details_obj.set_string_member ("recipient", targets);
+            }
+            else
+            {
+              details_obj.set_string_member ("host", this.tp_identifier.printf(targets));
+              details_obj.set_string_member ("recipient", obj_path);
+            }
+            details_obj.set_double_member ("duation", duration);
+            size_t length;
+            object.set_object_member (call_json_domain, details_obj);
+            string payload_string = gen.to_data(out length);
+            event_template.set_payload (new GLib.ByteArray.take (payload_string.data));
+            this.push_event (event_template);
           }
-          this.print_event (event_template);
         }
       });
   }
@@ -327,7 +369,14 @@ public class TelepathyObserver : DataProvider
           subj.set_text (info.get_display_name ());
           subj.set_mimetype (info.get_content_type ());
           //TODO: create if else
-          subj.set_origin (this.tp_identifier.printf (target.get_identifier ()));
+          if (channel.requested == true)
+          {
+            var split_uri =  channel.file.get_uri ().split ("/");
+            var uri = "%s/".printf(string.join ("/", split_uri[0:split_uri.length-1]));
+            subj.set_origin (uri);
+          }
+          else
+            subj.set_origin (this.tp_identifier.printf (target.get_identifier ()));
           event_template.add_subject (subj);
           //===========================================//
           event_template.add_subject (
@@ -344,6 +393,7 @@ public class TelepathyObserver : DataProvider
           var object = new Json.Object();
           root.set_object(object);
           gen.set_root(root);
+          gen.pretty = true;
 
           var details_obj = new Json.Object ();
           TelepathyGLib.FileTransferStateChangeReason reason;
@@ -354,12 +404,12 @@ public class TelepathyObserver : DataProvider
           if (channel.requested == true)
           {
             details_obj.set_string_member ("sender", obj_path);
-            details_obj.set_string_member ("receiver", this.tp_identifier.printf(target.get_identifier ()));
+            details_obj.set_string_member ("recipient", this.tp_identifier.printf(target.get_identifier ()));
           }
           else
           {
             details_obj.set_string_member ("sender", this.tp_identifier.printf(target.get_identifier ()));
-            details_obj.set_string_member ("receiver", obj_path);
+            details_obj.set_string_member ("recipient", obj_path);
           }
           details_obj.set_string_member ("mimetype", info.get_content_type ());
           details_obj.set_int_member ("date", channel.get_date ().to_unix ());
@@ -371,7 +421,7 @@ public class TelepathyObserver : DataProvider
           object.set_object_member (ft_json_domain, details_obj);
           string payload_string = gen.to_data(out length);
           event_template.set_payload (new GLib.ByteArray.take (payload_string.data));
-          this.print_event (event_template);
+          this.push_event (event_template);
         }
     });
   }
@@ -405,7 +455,6 @@ public class TelepathyObserver : DataProvider
 
   public override void start ()
   {
-    stdout.printf("=== START ===\n");
     observer = new TelepathyGLib.SimpleObserver.with_factory (factory,
                                                               true,
                                                               "Zeitgeist",
@@ -416,21 +465,21 @@ public class TelepathyObserver : DataProvider
     HashTable<string,Value?> call_filter = new HashTable<string,Value?> (str_hash, str_equal);
     call_filter.insert (TelepathyGLib.PROP_CHANNEL_CHANNEL_TYPE,
                    TelepathyGLib.IFACE_CHANNEL_TYPE_CALL);
-    call_filter.insert (TelepathyGLib.PROP_CHANNEL_TARGET_HANDLE_TYPE, 1); //FIXME: use proper Telepathy constant
+    call_filter.insert (TelepathyGLib.PROP_CHANNEL_TARGET_HANDLE_TYPE, 1);
     observer.add_observer_filter (call_filter);
 
     // Add Text Channel Filters
     HashTable<string,Value?> text_filter = new HashTable<string,Value?> (str_hash, str_equal);
     text_filter.insert (TelepathyGLib.PROP_CHANNEL_CHANNEL_TYPE,
                    TelepathyGLib.IFACE_CHANNEL_TYPE_TEXT);
-    text_filter.insert (TelepathyGLib.PROP_CHANNEL_TARGET_HANDLE_TYPE, 1); //FIXME: use proper Telepathy constant
+    text_filter.insert (TelepathyGLib.PROP_CHANNEL_TARGET_HANDLE_TYPE, 1);
     observer.add_observer_filter (text_filter);
 
     // Add FileTransfer Channel Filters
     HashTable<string,Value?> ft_filter = new HashTable<string,Value?> (str_hash, str_equal);
     ft_filter.insert (TelepathyGLib.PROP_CHANNEL_CHANNEL_TYPE,
                    TelepathyGLib.IFACE_CHANNEL_TYPE_FILE_TRANSFER);
-    ft_filter.insert (TelepathyGLib.PROP_CHANNEL_TARGET_HANDLE_TYPE, 1); //FIXME: use proper Telepathy constant
+    ft_filter.insert (TelepathyGLib.PROP_CHANNEL_TARGET_HANDLE_TYPE, 1);
     observer.add_observer_filter (ft_filter);
 
     observer.register ();
