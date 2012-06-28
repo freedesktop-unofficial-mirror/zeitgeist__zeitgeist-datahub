@@ -55,7 +55,7 @@ public class DataHub : Object, DataHubService
     zg_log = new Zeitgeist.Log ();
     zg_log.notify["connected"].connect (() => 
     {
-      if (!zg_log.is_connected ())
+      if (!zg_log.is_connected)
       {
         debug ("Zeitgeist-daemon disappeared from the bus, exitting...");
         quit ();
@@ -70,7 +70,7 @@ public class DataHub : Object, DataHubService
     unowned List<DataSource> iter = sources_info;
     while (iter != null)
     {
-      if (iter.data.get_unique_id () == ds.get_unique_id ())
+      if (iter.data.unique_id == ds.unique_id)
       {
         break;
       }
@@ -127,9 +127,9 @@ public class DataHub : Object, DataHubService
       int64 timestamp = 0;
       foreach (var src in sources_info)
       {
-        if (src.get_unique_id () == prov.unique_id)
+        if (src.unique_id == prov.unique_id)
         {
-          timestamp = src.get_timestamp ();
+          timestamp = src.timestamp;
           break;
         }
       }
@@ -243,15 +243,15 @@ public class DataHub : Object, DataHubService
     string[] actors = {};
     foreach (unowned DataSource src in sources_info)
     {
-      if (only_enabled && !src.is_enabled ()) continue;
-      unowned PtrArray template_arr = src.get_event_templates ();
+      if (only_enabled && !src.enabled) continue;
+      unowned PtrArray template_arr = src.event_templates;
       if (template_arr != null)
       {
         for (uint i=0; i<template_arr.len; i++)
         {
           unowned Zeitgeist.Event event_template =
               template_arr.index (i) as Zeitgeist.Event;
-          unowned string? actor = event_template.get_actor ();
+          unowned string? actor = event_template.actor;
 
           if (actor != null && actor != "")
           {

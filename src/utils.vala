@@ -221,7 +221,7 @@ public class Utils : Object
       try
       {
         var enumerator =
-          app_dir.enumerate_children (FILE_ATTRIBUTE_STANDARD_NAME, 0, null);
+          app_dir.enumerate_children (FileAttribute.STANDARD_NAME, 0, null);
         FileInfo fi = enumerator.next_file (null);
         while (fi != null)
         {
