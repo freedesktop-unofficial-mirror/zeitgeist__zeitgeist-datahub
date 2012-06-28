@@ -93,9 +93,9 @@ public class DataHub : Object, DataHubService
     {
       registry.source_registered.connect (data_source_registered);
       var sources = yield registry.get_data_sources (null);
-      for (uint i=0; i<sources.len; i++)
+      for (uint i=0; i<sources.length; i++)
       {
-        sources_info.prepend (sources.index (i) as DataSource);
+        sources_info.prepend (sources[i] as DataSource);
       }
     }
     catch (GLib.Error err)
@@ -139,7 +139,7 @@ public class DataHub : Object, DataHubService
         var ds = new DataSource.full (prov.unique_id,
                                       prov.name,
                                       prov.description,
-                                      new PtrArray ()); // FIXME: templates!
+                                      null); // FIXME: templates!
         try
         {
           enabled = yield registry.register_data_source (ds, null);
@@ -200,7 +200,7 @@ public class DataHub : Object, DataHubService
 
       try
       {
-        yield zg_log.insert_events_from_ptrarray ((owned) ptr_arr, null);
+        yield zg_log.insert_events_from_ptrarray (all_events, null);
       }
       catch (GLib.Error err)
       {
@@ -244,13 +244,12 @@ public class DataHub : Object, DataHubService
     foreach (unowned DataSource src in sources_info)
     {
       if (only_enabled && !src.enabled) continue;
-      unowned PtrArray template_arr = src.event_templates;
-      if (template_arr != null)
+      if (src.event_templates != null)
       {
-        for (uint i=0; i<template_arr.len; i++)
+        for (uint i=0; i<src.event_templates.length; i++)
         {
           unowned Zeitgeist.Event event_template =
-              template_arr.index (i) as Zeitgeist.Event;
+              src.event_templates[i] as Zeitgeist.Event;
           unowned string? actor = event_template.actor;
 
           if (actor != null && actor != "")
