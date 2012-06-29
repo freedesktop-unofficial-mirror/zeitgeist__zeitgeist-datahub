@@ -207,7 +207,6 @@ public class RecentManagerGtk : DataProvider
         {
           events.add ((owned) event);
         }
-        event.debug_print ();
       }
 
       if (log_access)
