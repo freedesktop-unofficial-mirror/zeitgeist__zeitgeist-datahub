@@ -182,7 +182,8 @@ public class RecentManagerGtk : DataProvider
         event = new Event.full (ZG.CREATE_EVENT,
                                 ZG.USER_ACTIVITY,
                                 actor,
-                                null, subject);
+                                null, null); //TODO: remove line below when bug is fixed
+        event.add_subject (subject);
         timestamp = ri.get_added ();
         timestamp *= 1000;
         event.timestamp = timestamp;
@@ -197,7 +198,8 @@ public class RecentManagerGtk : DataProvider
         event = new Event.full (ZG.MODIFY_EVENT,
                                 ZG.USER_ACTIVITY,
                                 actor,
-                                null, subject);
+                                null, null); //TODO: remove line below when bug is fixed
+        event.add_subject (subject);
         timestamp = ri.get_modified ();
         timestamp *= 1000;
         event.timestamp = timestamp;
@@ -205,6 +207,7 @@ public class RecentManagerGtk : DataProvider
         {
           events.add ((owned) event);
         }
+        event.debug_print ();
       }
 
       if (log_access)
@@ -212,7 +215,8 @@ public class RecentManagerGtk : DataProvider
         event = new Event.full (ZG.ACCESS_EVENT,
                                 ZG.USER_ACTIVITY,
                                 actor,
-                                null, subject);
+                                null, null); //TODO: remove line below when bug is fixed
+        event.add_subject (subject);
         timestamp = ri.get_visited ();
         timestamp *= 1000;
         event.timestamp = timestamp;

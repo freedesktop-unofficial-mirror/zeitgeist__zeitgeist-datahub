@@ -200,7 +200,8 @@ public class RecentDocumentsKDE : DataProvider
                         ""); // storage will be figured out by Zeitgeist
 
     Event event = new Event.full (event_interpretation, ZG.USER_ACTIVITY,
-                                  actor, null, subject);
+                                  actor, null, null); //TODO: remove line below when bug is fixed
+    event.add_subject (subject);
     event.timestamp = event_time;
 
     return event;

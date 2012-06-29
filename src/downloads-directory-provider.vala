@@ -126,11 +126,12 @@ public class DownloadsDirectoryMonitor : DataProvider
                                     origin,
                                     basename,
                                     "",
-				    ""); // storage will be figured out by Zeitgeist
+                                    ""); // storage will be figured out by Zeitgeist
 
     string actor = ""; // unknown
     Event event = new Event.full (ZG.CREATE_EVENT, ZG.WORLD_ACTIVITY,
-                                  actor, null, subject);
+                                  actor, null, null);
+    event.add_subject (subject);
 
     if (event != null)
     {

@@ -125,6 +125,7 @@ public class DataHub : Object, DataHubService
       bool enabled = true;
       // we need to get the timestamp before we register the data provider
       int64 timestamp = 0;
+      GenericArray<Event> events = new GenericArray<Event> ();
       foreach (var src in sources_info)
       {
         if (src.unique_id == prov.unique_id)
@@ -139,7 +140,7 @@ public class DataHub : Object, DataHubService
         var ds = new DataSource.full (prov.unique_id,
                                       prov.name,
                                       prov.description,
-                                      null); // FIXME: templates!
+                                      events); // FIXME: templates!
         try
         {
           enabled = yield registry.register_data_source (ds, null);
@@ -149,6 +150,7 @@ public class DataHub : Object, DataHubService
           warning ("%s", reg_err.message);
         }
       }
+
       prov.items_available.connect (this.items_available);
       if (enabled)
       {

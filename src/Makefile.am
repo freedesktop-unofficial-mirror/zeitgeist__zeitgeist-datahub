@@ -6,7 +6,7 @@ VALAFLAGS = \
 	--pkg gio-2.0 \
 	--pkg gio-unix-2.0 \
 	--pkg gtk+-2.0 \
-	--pkg zeitgeist-2.0 \
+	--pkg zeitgeist \
 	glib-extra.vapi \
 	$(top_srcdir)/config.vapi \
 	$(NULL)
