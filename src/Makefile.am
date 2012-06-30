@@ -10,7 +10,11 @@ VALAFLAGS = \
 	--pkg json-glib-1.0 \
 	--pkg telepathy-glib \
 	--pkg zeitgeist-1.0 \
+	--pkg goa-1.0 \
+	--vapidir $(top_srcdir)/src \
+	-X "-DGOA_API_IS_SUBJJECT_TO_CHANGE" \
 	glib-extra.vapi \
+	google-authorizer.vapi \
 	$(top_srcdir)/config.vapi \
 	$(NULL)
 
@@ -27,9 +31,9 @@ zeitgeist_datahub_SOURCES = \
 	kde-recent-document-provider.vala \
 	recent-manager-provider.vala \
 	telepathy-observer.vala \
+	google-provider.vala \
 	utils.vala \
 	zeitgeist-datahub.vala \
-	$(optional_zeitgeist_datahub_SOURCES) \
 	$(NULL)
 
 xdgautostart_in_files = \
@@ -44,4 +48,5 @@ CLEANFILES = zeitgeist-datahub.desktop
 
 EXTRA_DIST = \
 	glib-extra.vapi \
+	google-authorizer.vapi \
 	$(xdgautostart_in_files)
