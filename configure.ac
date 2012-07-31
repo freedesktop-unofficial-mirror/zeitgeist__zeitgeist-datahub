@@ -64,7 +64,7 @@ dnl Check that we meet the dependencies
 dnl ==============================================
 MIN_GLIB_VERSION=2.26.0
 MIN_ZEITGEIST_VERSION=0.3.18
-MIN_JSON_GLIB_VERSION=0.14.2
+MIN_JSON_GLIB_VERSION=0.14.0
 MIN_GTK_VERSION=2.16.0
 MIN_TP_GLIB_VERSION=0.18.0
 
