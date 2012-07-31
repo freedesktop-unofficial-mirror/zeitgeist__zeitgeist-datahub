@@ -37,6 +37,7 @@ AM_SILENT_RULES([yes])
 
 dnl ==============================================
 dnl Check settings for optional providers
+dnl ==============================================
 AC_ARG_ENABLE([downloads-monitor],
     AS_HELP_STRING([--disable-downloads-monitor],
         [Disables the XDG_DOWNLOAD_DIRECTORY file monitor]
@@ -57,21 +58,52 @@ if test "x$with_downloads_monitor" = "xyes"; then
 else
     AC_DEFINE([DOWNLOADS_MONITOR_ENABLED], [0], [Is the XDG_DOWNLOAD_DIRECTORY file monitor enabled?])
 fi
-dnl ==============================================
 
 dnl ==============================================
 dnl Check that we meet the dependencies
 dnl ==============================================
 MIN_GLIB_VERSION=2.26.0
-MIN_GTK_VERSION=2.16.0
 MIN_ZEITGEIST_VERSION=0.3.18
-MIN_TP_GLIB_VERSION=0.18.0
 MIN_JSON_GLIB_VERSION=0.14.2
+MIN_GTK_VERSION=2.16.0
+MIN_TP_GLIB_VERSION=0.18.0
 
-LIBRARY_MODULES="glib-2.0 >= $MIN_GLIB_VERSION gobject-2.0 gio-2.0 gio-unix-2.0 zeitgeist-1.0 >= $MIN_ZEITGEIST_VERSION telepathy-glib >= $MIN_TP_GLIB_VERSION json-glib-1.0 >= $MIN_JSON_GLIB_VERSION"
+LIBRARY_MODULES="glib-2.0 >= $MIN_GLIB_VERSION gobject-2.0 gio-2.0 gio-unix-2.0 zeitgeist-1.0 >= $MIN_ZEITGEIST_VERSION json-glib-1.0 >= $MIN_JSON_GLIB_VERSION"
 
 PKG_CHECK_MODULES(DATAHUB_MODULES, [$LIBRARY_MODULES])
 PKG_CHECK_MODULES(GTK, [gtk+-2.0 >= $MIN_GTK_VERSION])
+
+dnl ==============================================
+dnl Optional dependencies
+dnl ==============================================
+AC_ARG_ENABLE([telepathy],
+              AS_HELP_STRING([--disable-telepathy],
+                             [disable Telepathy [[default=auto]]]),,
+              [enable_telepathy=auto])
+
+if test "x$enable_telepathy" != "xno"; then
+   PKG_CHECK_MODULES(TELEPATHY_GLIB,
+                     [telepathy-glib >= $MIN_TP_GLIB_VERSION],
+                     [have_telepathy=yes],
+                     [have_telepathy=no])
+
+   DATAHUB_MODULES_CFLAGS="$DATAHUB_MODULES_CFLAGS $TELEPATHY_GLIB_CFLAGS"
+   DATAHUB_MODULES_LIBS="$DATAHUB_MODULES_LIBS $TELEPATHY_GLIB_LIBS"
+
+   if test "x$have_telepathy" = "xyes"; then
+      AC_DEFINE(HAVE_TELEPATHY, [], [Define if we have TELEPATHY_GLIB])
+   fi
+else
+   have_telepathy="no  (disabled)"
+fi
+
+if test "x$enable_telepathy" = "xyes"; then
+   if test "x$have_telepathy" != "xyes"; then
+      AC_MSG_ERROR([Couldn't find telepathy-glib >= $MIN_TP_GLIB_VERSION.])
+   fi
+fi
+
+AM_CONDITIONAL(HAVE_TELEPATHY, test "x$have_telepathy" = "xyes")
 
 dnl Expansions
 dnl AS_AC_EXPAND([PKGDATADIR], [$datadir/$PACKAGE_NAME])

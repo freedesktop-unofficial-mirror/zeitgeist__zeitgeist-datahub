@@ -8,7 +8,6 @@ VALAFLAGS = \
 	--pkg gio-unix-2.0 \
 	--pkg gtk+-2.0 \
 	--pkg json-glib-1.0 \
-	--pkg telepathy-glib \
 	--pkg zeitgeist-1.0 \
 	glib-extra.vapi \
 	$(top_srcdir)/config.vapi \
@@ -26,11 +25,15 @@ zeitgeist_datahub_SOURCES = \
 	downloads-directory-provider.vala \
 	kde-recent-document-provider.vala \
 	recent-manager-provider.vala \
-	telepathy-observer.vala \
 	utils.vala \
 	zeitgeist-datahub.vala \
 	$(optional_zeitgeist_datahub_SOURCES) \
 	$(NULL)
+
+if HAVE_TELEPATHY
+VALAFLAGS += --pkg telepathy-glib --define=HAVE_TELEPATHY
+zeitgeist_datahub_SOURCES += telepathy-observer.vala
+endif
 
 xdgautostart_in_files = \
 	zeitgeist-datahub.desktop.in

@@ -111,7 +111,10 @@ public class DataHub : Object, DataHubService
     */
     providers.prepend (new RecentManagerGtk (this));
     providers.prepend (new RecentDocumentsKDE (this));
+
+#if HAVE_TELEPATHY
     providers.prepend (new TelepathyObserver (this));
+#endif
 
     if (Config.DOWNLOADS_MONITOR_ENABLED)
         providers.prepend (new DownloadsDirectoryMonitor (this));
