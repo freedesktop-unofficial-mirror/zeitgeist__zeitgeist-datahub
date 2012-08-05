@@ -37,8 +37,15 @@ public class Utils : Object
     string contents;
 #if VALA_0_14
     uint8[] contents_array;
-    if (!file.load_contents (null, out contents_array, null))
-      return null;
+    try
+    {
+      if (!file.load_contents (null, out contents_array, null))
+        return null;
+    }
+    catch (Error err)
+    {
+      warning ("Couldn't get file contents %s: %s", file.get_path (), err.message);
+    }
     contents = (string) contents_array;
 #else
     if (!file.load_contents (null, out contents, null, null))
@@ -221,7 +228,7 @@ public class Utils : Object
       try
       {
         var enumerator =
-          app_dir.enumerate_children (FILE_ATTRIBUTE_STANDARD_NAME, 0, null);
+          app_dir.enumerate_children (FileAttribute.STANDARD_NAME, 0, null);
         FileInfo fi = enumerator.next_file (null);
         while (fi != null)
         {

@@ -55,7 +55,7 @@ public class DataHub : Object, DataHubService
     zg_log = new Zeitgeist.Log ();
     zg_log.notify["connected"].connect (() => 
     {
-      if (!zg_log.is_connected ())
+      if (!zg_log.is_connected)
       {
         debug ("Zeitgeist-daemon disappeared from the bus, exitting...");
         quit ();
@@ -70,7 +70,7 @@ public class DataHub : Object, DataHubService
     unowned List<DataSource> iter = sources_info;
     while (iter != null)
     {
-      if (iter.data.get_unique_id () == ds.get_unique_id ())
+      if (iter.data.unique_id == ds.unique_id)
       {
         break;
       }
@@ -93,9 +93,9 @@ public class DataHub : Object, DataHubService
     {
       registry.source_registered.connect (data_source_registered);
       var sources = yield registry.get_data_sources (null);
-      for (uint i=0; i<sources.len; i++)
+      for (uint i=0; i<sources.length; i++)
       {
-        sources_info.prepend (sources.index (i) as DataSource);
+        sources_info.prepend (sources.get (i) as DataSource);
       }
     }
     catch (GLib.Error err)
@@ -131,9 +131,9 @@ public class DataHub : Object, DataHubService
       int64 timestamp = 0;
       foreach (var src in sources_info)
       {
-        if (src.get_unique_id () == prov.unique_id)
+        if (src.unique_id == prov.unique_id)
         {
-          timestamp = src.get_timestamp ();
+          timestamp = src.timestamp;
           break;
         }
       }
@@ -143,7 +143,7 @@ public class DataHub : Object, DataHubService
         var ds = new DataSource.full (prov.unique_id,
                                       prov.name,
                                       prov.description,
-                                      new PtrArray ()); // FIXME: templates!
+                                      new GenericArray<Event> ()); // FIXME: templates!
         try
         {
           enabled = yield registry.register_data_source (ds, null);
@@ -197,14 +197,12 @@ public class DataHub : Object, DataHubService
     while (all_events.length > 0)
     {
       uint elements_pushed = uint.min ((uint) all_events.length, 100);
-      PtrArray ptr_arr = new PtrArray.with_free_func (Object.unref);
-      // careful here, the ptr array does ref_sink on the events
-      // inside Log.insert_events
+      GenericArray<Event> ptr_arr = new GenericArray<Event> ();
       for (uint i=0; i<elements_pushed; i++) ptr_arr.add (all_events[i]);
 
       try
       {
-        yield zg_log.insert_events_from_ptrarray ((owned) ptr_arr, null);
+        yield zg_log.insert_events_from_ptrarray (ptr_arr, null);
       }
       catch (GLib.Error err)
       {
@@ -247,15 +245,15 @@ public class DataHub : Object, DataHubService
     string[] actors = {};
     foreach (unowned DataSource src in sources_info)
     {
-      if (only_enabled && !src.is_enabled ()) continue;
-      unowned PtrArray template_arr = src.get_event_templates ();
+      if (only_enabled && !src.enabled) continue;
+      var template_arr = src.event_templates;
       if (template_arr != null)
       {
-        for (uint i=0; i<template_arr.len; i++)
+        for (uint i=0; i<template_arr.length; i++)
         {
-          unowned Zeitgeist.Event event_template =
-              template_arr.index (i) as Zeitgeist.Event;
-          unowned string? actor = event_template.get_actor ();
+          Zeitgeist.Event event_template =
+              template_arr.get (i) as Zeitgeist.Event;
+          string? actor = event_template.actor;
 
           if (actor != null && actor != "")
           {

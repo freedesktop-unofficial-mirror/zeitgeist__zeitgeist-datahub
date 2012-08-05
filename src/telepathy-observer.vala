@@ -49,7 +49,14 @@ public class TelepathyObserver : DataProvider
   construct
   {
     call_timers = new HashTable<string, Timer> (str_hash, str_equal);
-    dbus = TelepathyGLib.DBusDaemon.dup ();
+    try {
+      dbus = TelepathyGLib.DBusDaemon.dup ();
+    }
+    catch (GLib.Error err)
+    {
+      warning ("Couldn't dup DBusDaemon: %s", err.message);
+      return;
+    }
     factory = new TelepathyGLib.AutomaticClientFactory (dbus);
 
     Quark[] channel_quark = {TelepathyGLib.Channel.get_feature_quark_contacts ()};
@@ -86,7 +93,7 @@ public class TelepathyObserver : DataProvider
     obj_path = this.tp_account_path.printf(obj_path[
       TelepathyGLib.ACCOUNT_OBJECT_PATH_BASE.length : obj_path.length]);
     Event event_template = new Event.full (
-                              ZG_ACCESS_EVENT,
+                              ZG.ACCESS_EVENT,
                               "",
                               this.actor,
                               null,
@@ -96,9 +103,9 @@ public class TelepathyObserver : DataProvider
      * Whether user initiated the chat or not
      */
     if (!channel.requested)
-      event_template.set_manifestation (ZG_WORLD_ACTIVITY);
+      event_template.manifestation = ZG.WORLD_ACTIVITY;
     else
-      event_template.set_manifestation (ZG_USER_ACTIVITY);
+      event_template.manifestation = ZG.USER_ACTIVITY;
 
     /*
      * Create IM subject for the event
@@ -106,8 +113,8 @@ public class TelepathyObserver : DataProvider
     event_template.add_subject (
       new Subject.full (
         "",
-        NMO_IMMESSAGE,
-        NFO_SOFTWARE_SERVICE,
+        NMO.IMMESSAGE,
+        NFO.SOFTWARE_SERVICE,
         "plain/text",
         this.tp_identifier.printf (target.get_identifier ()),
         "",
@@ -120,8 +127,8 @@ public class TelepathyObserver : DataProvider
     event_template.add_subject (
       new Subject.full (
         this.tp_identifier.printf (target.get_identifier ()),
-        NCO_CONTACT,
-        NCO_CONTACT_LIST_DATA_OBJECT,
+        NCO.CONTACT,
+        NCO.CONTACT_LIST_DATA_OBJECT,
         "",
         obj_path,
         target.get_alias (),
@@ -156,8 +163,8 @@ public class TelepathyObserver : DataProvider
         if (!message.is_delivery_report ())
         {
           event_template = this.create_text_event (account, channel);
-          event_template.set_interpretation (ZG_RECEIVE_EVENT);
-          event_template.set_manifestation (ZG_WORLD_ACTIVITY);
+          event_template.interpretation = ZG.RECEIVE_EVENT;
+          event_template.manifestation = ZG.WORLD_ACTIVITY;
           this.push_event (event_template);
         }
         // FIXME: what about sent messages? what happens with them?
@@ -169,7 +176,7 @@ public class TelepathyObserver : DataProvider
         event_template = this.create_text_event (account, channel);
         // manifestation depends on the chat creator, unless we can
         // get a better value.
-        event_template.set_interpretation (ZG_LEAVE_EVENT);
+        event_template.interpretation = ZG.LEAVE_EVENT;
         this.push_event (event_template);
       });
       /*
@@ -177,8 +184,8 @@ public class TelepathyObserver : DataProvider
        */
       channel.message_received.connect (() => {
         event_template = this.create_text_event (account, channel);
-        event_template.set_interpretation (ZG_RECEIVE_EVENT);
-        event_template.set_manifestation (ZG_WORLD_ACTIVITY);
+        event_template.interpretation = ZG.RECEIVE_EVENT;
+        event_template.manifestation = ZG.WORLD_ACTIVITY;
         this.push_event (event_template);
       });
       /*
@@ -186,8 +193,8 @@ public class TelepathyObserver : DataProvider
        */
       channel.message_sent.connect (() => {
         event_template = this.create_text_event (account, channel);
-        event_template.set_interpretation (ZG_SEND_EVENT);
-        event_template.set_manifestation (ZG_USER_ACTIVITY);
+        event_template.interpretation = ZG.SEND_EVENT;
+        event_template.manifestation = ZG.USER_ACTIVITY;
         this.push_event (event_template);
       });
     }
@@ -207,21 +214,21 @@ public class TelepathyObserver : DataProvider
     obj_path = this.tp_account_path.printf(obj_path[
       TelepathyGLib.ACCOUNT_OBJECT_PATH_BASE.length : obj_path.length]);
     Event event_template = new Event.full (
-                              ZG_ACCESS_EVENT,
-                              ZG_USER_ACTIVITY,
+                              ZG.ACCESS_EVENT,
+                              ZG.USER_ACTIVITY,
                               this.actor,
                               null,
                               obj_path);
     if (!channel.requested)
-      event_template.set_manifestation (ZG_WORLD_ACTIVITY);
+      event_template.manifestation = ZG.WORLD_ACTIVITY;
     /*
      * Create Call subject for the event
      */
     event_template.add_subject (
       new Subject.full (
         "",
-        NFO_AUDIO,
-        NFO_MEDIA_STREAM,
+        NFO.AUDIO,
+        NFO.MEDIA_STREAM,
         "x-telepathy/call",
         this.tp_identifier.printf (target.get_identifier ()),
         target.get_alias (),
@@ -233,8 +240,8 @@ public class TelepathyObserver : DataProvider
     event_template.add_subject (
       new Subject.full (
         this.tp_identifier.printf(target.get_identifier ()),
-        NCO_CONTACT,
-        NCO_CONTACT_LIST_DATA_OBJECT,
+        NCO.CONTACT,
+        NCO.CONTACT_LIST_DATA_OBJECT,
         "",
         obj_path,
         target.get_alias (),
@@ -267,7 +274,7 @@ public class TelepathyObserver : DataProvider
          */
         if (state == TelepathyGLib.CallState.INITIALISED)
         {
-          event_template.set_interpretation (ZG_CREATE_EVENT);
+          event_template.interpretation = ZG.CREATE_EVENT;
           Timer t = new Timer ();
           t.stop ();
           call_timers.insert (channel.get_object_path (), (owned) t);
@@ -281,27 +288,27 @@ public class TelepathyObserver : DataProvider
         {
           if (state == TelepathyGLib.CallState.ACTIVE)
           {
-            event_template.set_interpretation (ZG_ACCESS_EVENT);
+            event_template.interpretation = ZG.ACCESS_EVENT;
             call_timers.lookup (channel.get_object_path ()).start();
             this.push_event (event_template);
           }
           else if (state == TelepathyGLib.CallState.ENDED)
           {
-            event_template.set_interpretation (ZG_LEAVE_EVENT);
+            event_template.interpretation = ZG.LEAVE_EVENT;
 
             /* Call was created by user but was rejected or not answered */
             if (reason.reason == TelepathyGLib.CallStateChangeReason.REJECTED
                 || reason.reason == TelepathyGLib.CallStateChangeReason.NO_ANSWER)
             {
               if (channel.requested)
-                event_template.set_manifestation (ZG_WORLD_ACTIVITY);
+                event_template.manifestation = ZG.WORLD_ACTIVITY;
               else
-                event_template.set_interpretation (ZG_USER_ACTIVITY);
+                event_template.interpretation = ZG.USER_ACTIVITY;
 
               if (reason.reason == TelepathyGLib.CallStateChangeReason.NO_ANSWER)
-                event_template.set_interpretation (ZG_EXPIRE_EVENT);
+                event_template.interpretation = ZG.EXPIRE_EVENT;
               else
-                event_template.set_interpretation (ZG_DENY_EVENT);
+                event_template.interpretation = ZG.DENY_EVENT;
             }
 
             var duration  = call_timers.lookup (channel.get_object_path ()).elapsed ();
@@ -326,7 +333,7 @@ public class TelepathyObserver : DataProvider
             size_t length;
             object.set_object_member (call_json_domain, details_obj);
             string payload_string = gen.to_data(out length);
-            event_template.set_payload (new GLib.ByteArray.take (payload_string.data));
+            event_template.payload = new GLib.ByteArray.take (payload_string.data);
             this.push_event (event_template);
           }
         }
@@ -347,7 +354,16 @@ public class TelepathyObserver : DataProvider
         var target = channel.get_target_contact ();
         var attr = "%s, %s, %s".printf (FileAttribute.STANDARD_DISPLAY_NAME,
           FileAttribute.STANDARD_CONTENT_TYPE, FileAttribute.STANDARD_SIZE);
-        var info = yield channel.file.query_info_async (attr, 0);
+        FileInfo info = null;
+        try
+        {
+          info = yield channel.file.query_info_async (attr, 0);
+        }
+        catch (GLib.Error err)
+        {
+          warning ("Couldn't process %s: %s", channel.file.get_path (), err.message);
+          return;
+        }
         var obj_path = account.get_object_path ();
         obj_path = this.tp_account_path.printf("%s",
                    obj_path [TelepathyGLib.ACCOUNT_OBJECT_PATH_BASE.length:
@@ -356,32 +372,32 @@ public class TelepathyObserver : DataProvider
         var event_template = new Event ();
         if (channel.requested)
         {
-          event_template.set_interpretation (ZG_SEND_EVENT);
-          event_template.set_manifestation (ZG_USER_ACTIVITY);
+          event_template.interpretation = ZG.SEND_EVENT;
+          event_template.manifestation = ZG.USER_ACTIVITY;
         }
         else
         {
-          event_template.set_interpretation (ZG_RECEIVE_EVENT);
-          event_template.set_manifestation (ZG_WORLD_ACTIVITY);
+          event_template.interpretation = ZG.RECEIVE_EVENT;
+          event_template.manifestation = ZG.WORLD_ACTIVITY;
         }
-        event_template.set_actor (this.actor);
+        event_template.actor = this.actor;
         /*
          * Create Subject representing the sent/received file
          */
         var subj = new Subject ();
-        subj.set_uri (channel.file.get_uri ());
-        subj.set_interpretation (interpretation_for_mimetype (info.get_content_type ()));
-        subj.set_manifestation (NFO_FILE_DATA_OBJECT);
-        subj.set_text (info.get_display_name ());
-        subj.set_mimetype (info.get_content_type ());
+        subj.uri = channel.file.get_uri ();
+        subj.interpretation = interpretation_for_mimetype (info.get_content_type ());
+        subj.manifestation = NFO.FILE_DATA_OBJECT;
+        subj.text = info.get_display_name ();
+        subj.mimetype = info.get_content_type ();
         if (channel.requested == true)
         {
           var split_uri = channel.file.get_uri ().split ("/");
           var uri = "%s/".printf(string.join ("/", split_uri[0:split_uri.length-1]));
-          subj.set_origin (uri);
+          subj.origin = uri;
         }
         else
-          subj.set_origin (this.tp_identifier.printf (target.get_identifier ()));
+          subj.origin = this.tp_identifier.printf (target.get_identifier ());
         event_template.add_subject (subj);
 
         /*
@@ -389,8 +405,8 @@ public class TelepathyObserver : DataProvider
          */
         event_template.add_subject (
           new Subject.full (this.tp_identifier.printf(target.get_identifier ()),
-            NCO_CONTACT,
-            NCO_CONTACT_LIST_DATA_OBJECT,
+            NCO.CONTACT,
+            NCO.CONTACT_LIST_DATA_OBJECT,
             "",
             obj_path,
             target.get_alias (),
@@ -416,7 +432,7 @@ public class TelepathyObserver : DataProvider
         size_t length;
         object.set_object_member (ft_json_domain, details_obj);
         string payload_string = gen.to_data (out length);
-        event_template.set_payload (new GLib.ByteArray.take (payload_string.data));
+        event_template.payload = new GLib.ByteArray.take (payload_string.data);
         this.push_event (event_template);
       }
   }
@@ -492,8 +508,14 @@ public class TelepathyObserver : DataProvider
                       TelepathyGLib.IFACE_CHANNEL_TYPE_FILE_TRANSFER);
     ft_filter.insert (TelepathyGLib.PROP_CHANNEL_TARGET_HANDLE_TYPE, 1); // 1 => TP_HANDLE_TYPE_CONTACT, somehow vala fails to compile when using the constant
     observer.add_observer_filter (ft_filter);
-
-    observer.register ();
+    try
+    {
+      observer.register ();
+    }
+    catch (GLib.Error err)
+    {
+      warning ("Couldn't register observer: %s", err.message);
+    }
   }
 
   public override void stop ()

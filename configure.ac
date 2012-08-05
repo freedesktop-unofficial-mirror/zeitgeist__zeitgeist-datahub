@@ -69,7 +69,7 @@ MIN_JSON_GLIB_VERSION=0.14.0
 MIN_GTK_VERSION=2.16.0
 MIN_TP_GLIB_VERSION=0.18.0
 
-LIBRARY_MODULES="glib-2.0 >= $MIN_GLIB_VERSION gobject-2.0 gio-2.0 gio-unix-2.0 zeitgeist-1.0 >= $MIN_ZEITGEIST_VERSION json-glib-1.0 >= $MIN_JSON_GLIB_VERSION"
+LIBRARY_MODULES="glib-2.0 >= $MIN_GLIB_VERSION gobject-2.0 gio-2.0 gio-unix-2.0 zeitgeist-2.0 >= $MIN_ZEITGEIST_VERSION json-glib-1.0 >= $MIN_JSON_GLIB_VERSION"
 
 PKG_CHECK_MODULES(DATAHUB_MODULES, [$LIBRARY_MODULES])
 PKG_CHECK_MODULES(GTK, [gtk+-2.0 >= $MIN_GTK_VERSION])
@@ -132,5 +132,6 @@ ${PACKAGE}-${VERSION}
 
   Optional Providers
     Downloads Directory Monitor: ${with_downloads_monitor}
+    Telepathy Logger           : ${have_telepathy}
 
 EOF

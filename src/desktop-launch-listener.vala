@@ -142,16 +142,16 @@ public class DesktopLaunchListener : DataProvider
     var event = new Zeitgeist.Event ();
     var subject = new Zeitgeist.Subject ();
 
-    event.set_actor (launcher_uri);
-    event.set_interpretation (Zeitgeist.ZG_ACCESS_EVENT);
-    event.set_manifestation (Zeitgeist.ZG_USER_ACTIVITY);
+    event.actor = launcher_uri;
+    event.interpretation = ZG.ACCESS_EVENT;
+    event.manifestation = ZG.USER_ACTIVITY;
     event.add_subject (subject);
 
-    subject.set_uri (launched_uri);
-    subject.set_interpretation (Zeitgeist.NFO_SOFTWARE);
-    subject.set_manifestation (Zeitgeist.NFO_SOFTWARE_ITEM);
-    subject.set_mimetype ("application/x-desktop");
-    subject.set_text (dai.get_display_name ());
+    subject.uri = launched_uri;
+    subject.interpretation = NFO.SOFTWARE;
+    subject.manifestation = NFO.SOFTWARE_ITEM;
+    subject.mimetype = "application/x-desktop";
+    subject.text = dai.get_display_name ();
 
     var arr = new GenericArray<Event> ();
     arr.add (event);

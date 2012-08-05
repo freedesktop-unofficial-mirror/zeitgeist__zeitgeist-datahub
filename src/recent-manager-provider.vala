@@ -179,13 +179,14 @@ public class RecentManagerGtk : DataProvider
 
       if (log_create)
       {
-        event = new Event.full (ZG_CREATE_EVENT,
-                                ZG_USER_ACTIVITY,
+        event = new Event.full (ZG.ACCESS_EVENT,
+                                ZG.USER_ACTIVITY,
                                 actor,
-                                subject, null);
+                                null, null);
+        event.add_subject (subject);
         timestamp = ri.get_added ();
         timestamp *= 1000;
-        event.set_timestamp (timestamp);
+        event.timestamp = timestamp;
         if (timestamp > last_timestamp && timestamp >= 0)
         {
           events.add ((owned) event);
@@ -194,13 +195,14 @@ public class RecentManagerGtk : DataProvider
 
       if (log_modify)
       {
-        event = new Event.full (ZG_MODIFY_EVENT,
-                                ZG_USER_ACTIVITY,
+        event = new Event.full (ZG.MODIFY_EVENT,
+                                ZG.USER_ACTIVITY,
                                 actor,
-                                subject, null);
+                                null , null);
+        event.add_subject (subject);
         timestamp = ri.get_modified ();
         timestamp *= 1000;
-        event.set_timestamp (timestamp);
+        event.timestamp = timestamp;
         if (timestamp > last_timestamp && timestamp >= 0)
         {
           events.add ((owned) event);
@@ -209,13 +211,14 @@ public class RecentManagerGtk : DataProvider
 
       if (log_access)
       {
-        event = new Event.full (ZG_ACCESS_EVENT,
-                                ZG_USER_ACTIVITY,
+        event = new Event.full (ZG.ACCESS_EVENT,
+                                ZG.USER_ACTIVITY,
                                 actor,
-                                subject, null);
+                                null, null);
+        event.add_subject (subject);
         timestamp = ri.get_visited ();
         timestamp *= 1000;
-        event.set_timestamp (timestamp);
+        event.timestamp = timestamp;
         if (timestamp > last_timestamp && timestamp >= 0)
         {
           events.add ((owned) event);

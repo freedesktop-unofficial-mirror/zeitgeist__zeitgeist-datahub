@@ -56,8 +56,15 @@ public class DownloadsDirectoryMonitor : DataProvider
     if (downloads_path != null)
     {
       downloads_directory = File.new_for_path (downloads_path);
-      monitor = downloads_directory.monitor_directory (
-        GLib.FileMonitorFlags.NONE/*SEND_MOVED*/);
+      try
+      {
+        monitor = downloads_directory.monitor_directory (
+          GLib.FileMonitorFlags.NONE/*SEND_MOVED*/);
+      }
+      catch (GLib.Error err)
+      {
+        warning ("Couldn't set up monitor on Downloads directory: %s", err.message);
+      }
     }
   }
 
@@ -79,9 +86,9 @@ public class DownloadsDirectoryMonitor : DataProvider
   }
 
   private const string ATTRIBUTES =
-    FILE_ATTRIBUTE_STANDARD_FAST_CONTENT_TYPE + "," +
-    FILE_ATTRIBUTE_STANDARD_IS_HIDDEN + "," +
-    FILE_ATTRIBUTE_STANDARD_IS_BACKUP + ",";
+    FileAttribute.STANDARD_FAST_CONTENT_TYPE + "," +
+    FileAttribute.STANDARD_IS_HIDDEN + "," +
+    FileAttribute.STANDARD_IS_BACKUP + ",";
 
   private async void process_event (GLib.File file, GLib.File? other_file,
     GLib.FileMonitorEvent event_type)
@@ -115,7 +122,7 @@ public class DownloadsDirectoryMonitor : DataProvider
     }
 
     string mimetype = subject_info.get_attribute_string (
-      FILE_ATTRIBUTE_STANDARD_FAST_CONTENT_TYPE);
+      FileAttribute.STANDARD_FAST_CONTENT_TYPE);
     string origin = Path.get_dirname (uri);
     string basename = Path.get_basename (file.get_path ());
 
@@ -125,11 +132,12 @@ public class DownloadsDirectoryMonitor : DataProvider
                                     mimetype,
                                     origin,
                                     basename,
-                                    ""); // storage will be figured out by Zeitgeist
+                                    "", uri); // storage will be figured out by Zeitgeist
 
     string actor = ""; // unknown
-    Event event = new Event.full (ZG_CREATE_EVENT, ZG_WORLD_ACTIVITY,
-                                  actor, subject, null);
+    Event event = new Event.full (ZG.CREATE_EVENT, ZG.WORLD_ACTIVITY,
+                                  actor, null, null);
+    event.add_subject (subject);
 
     if (event != null)
     {

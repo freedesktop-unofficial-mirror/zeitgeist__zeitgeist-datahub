@@ -40,15 +40,15 @@ public class RecentDocumentsKDE : DataProvider
 
   private const string ATTRIBUTE_SEPARATOR = ",";
   private const string FILE_ATTRIBUTE_QUERY_RECENT =
-    GLib.FILE_ATTRIBUTE_STANDARD_TYPE + ATTRIBUTE_SEPARATOR +
-    GLib.FILE_ATTRIBUTE_TIME_MODIFIED + ATTRIBUTE_SEPARATOR +
-    GLib.FILE_ATTRIBUTE_TIME_MODIFIED_USEC;
+    GLib.FileAttribute.STANDARD_TYPE + ATTRIBUTE_SEPARATOR +
+    GLib.FileAttribute.TIME_MODIFIED + ATTRIBUTE_SEPARATOR +
+    GLib.FileAttribute.TIME_MODIFIED_USEC;
   private const string FILE_ATTRIBUTE_QUERY_SUBJECT =
-    GLib.FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE + ATTRIBUTE_SEPARATOR +
-    GLib.FILE_ATTRIBUTE_TIME_MODIFIED + ATTRIBUTE_SEPARATOR +
-    GLib.FILE_ATTRIBUTE_TIME_MODIFIED_USEC + ATTRIBUTE_SEPARATOR +
-    GLib.FILE_ATTRIBUTE_TIME_CHANGED + ATTRIBUTE_SEPARATOR +
-    GLib.FILE_ATTRIBUTE_TIME_CHANGED_USEC;
+    GLib.FileAttribute.STANDARD_CONTENT_TYPE + ATTRIBUTE_SEPARATOR +
+    GLib.FileAttribute.TIME_MODIFIED + ATTRIBUTE_SEPARATOR +
+    GLib.FileAttribute.TIME_MODIFIED_USEC + ATTRIBUTE_SEPARATOR +
+    GLib.FileAttribute.TIME_CHANGED + ATTRIBUTE_SEPARATOR +
+    GLib.FileAttribute.TIME_CHANGED_USEC;
 
   private const int TIME_EPSILON = 100; // msec
 
@@ -73,13 +73,27 @@ public class RecentDocumentsKDE : DataProvider
 
   construct
   {
-    recent_regex = new Regex ("URL\\[[^]]+\\]=");
-    url_regex = new Regex ("\\$HOME");
-
+    //FIXME: is done properly ?
+    try
+    {
+      recent_regex = new Regex ("URL\\[[^]]+\\]=");
+      url_regex = new Regex ("\\$HOME");
+    }
+    catch (RegexError err)
+    {
+      warning ("Couldn't process regex: %s", err.message);
+    }
     recent_document_path = Environment.get_home_dir () + RECENT_DOCUMENTS_PATH;
     recent_documents_directory = File.new_for_path (recent_document_path);
-    monitor = recent_documents_directory.monitor_directory (
-        GLib.FileMonitorFlags.NONE);
+    try
+    {
+      monitor = recent_documents_directory.monitor_directory (
+          GLib.FileMonitorFlags.NONE);
+    }
+    catch (GLib.IOError err)
+    {
+      warning ("Couldn't set up monitor: %s", err.message);
+    }
   }
 
   public override void start ()
@@ -130,7 +144,7 @@ public class RecentDocumentsKDE : DataProvider
       FILE_ATTRIBUTE_QUERY_RECENT, GLib.FileQueryInfoFlags.NONE);
 
     GLib.FileType file_type = (GLib.FileType) recent_info.get_attribute_uint32 (
-      GLib.FILE_ATTRIBUTE_STANDARD_TYPE);
+      GLib.FileAttribute.STANDARD_TYPE);
     if (file_type != GLib.FileType.REGULAR)
       return null;
 
@@ -171,23 +185,23 @@ public class RecentDocumentsKDE : DataProvider
     int64 modification_time = Timestamp.from_timeval (timeval);
 
     timeval.tv_sec = (long) subject_info.get_attribute_uint64 (
-      GLib.FILE_ATTRIBUTE_TIME_CHANGED);
+      GLib.FileAttribute.TIME_CHANGED);
     timeval.tv_usec = subject_info.get_attribute_uint32 (
-      GLib.FILE_ATTRIBUTE_TIME_CHANGED_USEC);
+      GLib.FileAttribute.TIME_CHANGED_USEC);
     int64 creation_time = Timestamp.from_timeval (timeval);
 
     string mimetype = subject_info.get_attribute_string (
-      FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE);
+      FileAttribute.STANDARD_CONTENT_TYPE);
 
     string event_interpretation;
     int64 creation_diff = event_time - creation_time;
     int64 modification_diff = event_time - modification_time;
     if (creation_diff.abs () < TIME_EPSILON)
-      event_interpretation = ZG_CREATE_EVENT;
+      event_interpretation = ZG.CREATE_EVENT;
     else if (modification_diff.abs () < TIME_EPSILON)
-      event_interpretation = ZG_MODIFY_EVENT;
+      event_interpretation = ZG.MODIFY_EVENT;
     else
-      event_interpretation = ZG_ACCESS_EVENT;
+      event_interpretation = ZG.ACCESS_EVENT;
 
     string origin = Path.get_dirname (uri);
     var subject =
@@ -199,9 +213,10 @@ public class RecentDocumentsKDE : DataProvider
                         basename,
                         ""); // storage will be figured out by Zeitgeist
 
-    Event event = new Event.full (event_interpretation, ZG_USER_ACTIVITY,
-                                  actor, subject, null);
-    event.set_timestamp (event_time);
+    Event event = new Event.full (event_interpretation, ZG.USER_ACTIVITY,
+                                  actor, null, null);
+    event.add_subject (subject);
+    event.timestamp = event_time;
 
     return event;
   }
@@ -234,7 +249,7 @@ public class RecentDocumentsKDE : DataProvider
 
     GLib.File directory = GLib.File.new_for_path (recent_document_path);
     GLib.FileEnumerator enumerator = directory.enumerate_children (
-      FILE_ATTRIBUTE_STANDARD_NAME, GLib.FileQueryInfoFlags.NONE);
+      FileAttribute.STANDARD_NAME, GLib.FileQueryInfoFlags.NONE);
     GLib.FileInfo fi;
     while ((fi = enumerator.next_file ()) != null)
     {
