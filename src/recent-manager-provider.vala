@@ -82,7 +82,7 @@ public class RecentManagerGtk : DataProvider
   {
     GenericArray<Event> events = new GenericArray<Event> ();
 
-    int64 signal_time = Timestamp.now ();
+    int64 signal_time = Timestamp.from_now ();
     string[] ignored_actors = datahub.get_data_source_actors ();
 
     foreach (Gtk.RecentInfo ri in recent_manager.get_items ())
