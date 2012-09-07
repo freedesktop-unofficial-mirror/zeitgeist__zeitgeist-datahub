@@ -1,3 +1,11 @@
+Zeitgeist-datahub 0.9.5
+======================= 
+
+* Port to latest vala
+
+* Add Telepathy logging support for 1-to-1 chats, calls and filetransfers
+
+
 Zeitgeist-datahub 0.8.2
 =======================
 
