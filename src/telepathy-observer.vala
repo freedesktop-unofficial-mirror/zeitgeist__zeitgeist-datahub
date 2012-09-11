@@ -91,7 +91,7 @@ public class TelepathyObserver : DataProvider
                               this.actor,
                               null,
                               obj_path);
-
+    event_template.set_origin(obj_path);
     /*
      * Whether user initiated the chat or not
      */
@@ -212,6 +212,7 @@ public class TelepathyObserver : DataProvider
                               this.actor,
                               null,
                               obj_path);
+    event_template.set_origin(obj_path);
     if (!channel.requested)
       event_template.set_manifestation (ZG_WORLD_ACTIVITY);
     /*
@@ -365,6 +366,7 @@ public class TelepathyObserver : DataProvider
           event_template.set_manifestation (ZG_WORLD_ACTIVITY);
         }
         event_template.set_actor (this.actor);
+        event_template.set_origin (obj_path);
         /*
          * Create Subject representing the sent/received file
          */
