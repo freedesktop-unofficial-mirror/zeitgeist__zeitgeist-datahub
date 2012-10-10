@@ -132,7 +132,7 @@ public class DownloadsDirectoryMonitor : DataProvider
                                     mimetype,
                                     origin,
                                     basename,
-                                    "", uri); // storage will be figured out by Zeitgeist
+                                    ""); // storage will be figured out by Zeitgeist
 
     string actor = ""; // unknown
     Event event = new Event.full (ZG.CREATE_EVENT, ZG.WORLD_ACTIVITY,
