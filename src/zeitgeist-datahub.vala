@@ -202,7 +202,7 @@ public class DataHub : Object, DataHubService
 
       try
       {
-        yield zg_log.insert_events_from_ptrarray (ptr_arr, null);
+        yield zg_log.insert_events(ptr_arr, null);
       }
       catch (GLib.Error err)
       {

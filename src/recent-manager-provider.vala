@@ -50,7 +50,6 @@ public class RecentManagerGtk : DataProvider
   construct
   {
     recent_manager = Gtk.RecentManager.get_default ();
-    recent_manager.set_limit (-1);
   }
 
   public override void start ()

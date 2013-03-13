@@ -6,7 +6,7 @@ AM_CPPFLAGS = \
 VALAFLAGS = \
 	--pkg gio-2.0 \
 	--pkg gio-unix-2.0 \
-	--pkg gtk+-2.0 \
+	--pkg gtk+-3.0 \
 	--pkg json-glib-1.0 \
 	--pkg zeitgeist-2.0 \
 	glib-extra.vapi \
