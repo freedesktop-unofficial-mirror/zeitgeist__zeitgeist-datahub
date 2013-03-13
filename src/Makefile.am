@@ -30,9 +30,9 @@ zeitgeist_datahub_SOURCES = \
 	$(optional_zeitgeist_datahub_SOURCES) \
 	$(NULL)
 
-if HAVE_TELEPATHY
-	VALAFLAGS += --pkg telepathy-glib
-	zeitgeist_datahub_SOURCES += telepathy-observer.vala
+if ENABLE_TELEPATHY
+VALAFLAGS += --pkg telepathy-glib
+zeitgeist_datahub_SOURCES += telepathy-observer.vala
 endif
 
 xdgautostart_in_files = \

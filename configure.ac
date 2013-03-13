@@ -77,34 +77,24 @@ PKG_CHECK_MODULES(GTK, [gtk+-2.0 >= $MIN_GTK_VERSION])
 dnl ==============================================
 dnl Optional dependencies
 dnl ==============================================
+
 AC_ARG_ENABLE([telepathy],
-              AS_HELP_STRING([--disable-telepathy],
-            [disable Telepathy [[default=auto]]]),[enable_telepathy=no])
+	AS_HELP_STRING([--enable-telepathy[=@<:@no/auto/yes@:>@]],[Build with Telepathy support]),
+	[enable_telepathy=$enableval],
+	[enable_telepathy="auto"])
 
-
-if test "x$enable_telepathy" != "xno"; then
-   PKG_CHECK_MODULES(TELEPATHY_GLIB,
-                     [telepathy-glib >= $MIN_TP_GLIB_VERSION],
-                     [have_telepathy=yes],
-                     [have_telepathy=no])
-
-   DATAHUB_MODULES_CFLAGS="$DATAHUB_MODULES_CFLAGS $TELEPATHY_GLIB_CFLAGS"
-   DATAHUB_MODULES_LIBS="$DATAHUB_MODULES_LIBS $TELEPATHY_GLIB_LIBS"
-
-   if test "x$have_telepathy" = "xyes"; then
-      AC_DEFINE(HAVE_TELEPATHY, [], [Define if we have TELEPATHY_GLIB])
-   fi
-else
-   have_telepathy="no  (disabled)"
+if test "x$enable_telepathy" = "xauto" ; then
+	PKG_CHECK_EXISTS([telepathy-glib >= $MIN_TP_GLIB_VERSION], \
+			  enable_telepathy="yes", enable_telepathy="no")
 fi
 
-if test "x$enable_telepathy" = "xyes"; then
-   if test "x$have_telepathy" != "xyes"; then
-      AC_MSG_ERROR([Couldn't find telepathy-glib >= $MIN_TP_GLIB_VERSION.])
-   fi
+if test "x$enable_telepathy" = "xyes" ; then
+	PKG_CHECK_MODULES(TELEPATHY_GLIB, [telepathy-glib >= $MIN_TP_GLIB_VERSION])
+	DATAHUB_MODULES_CFLAGS="$DATAHUB_MODULES_CFLAGS $TELEPATHY_GLIB_CFLAGS"
+	DATAHUB_MODULES_LIBS="$DATAHUB_MODULES_LIBS $TELEPATHY_GLIB_LIBS"
 fi
 
-AM_CONDITIONAL(HAVE_TELEPATHY, test "x$have_telepathy" = "xyes")
+AM_CONDITIONAL(ENABLE_TELEPATHY, test x"$enable_telepathy" = "xyes")
 
 dnl Expansions
 dnl AS_AC_EXPAND([PKGDATADIR], [$datadir/$PACKAGE_NAME])
@@ -132,6 +122,6 @@ ${PACKAGE}-${VERSION}
 
   Optional Providers
     Downloads Directory Monitor: ${with_downloads_monitor}
-    Telepathy Logger           : ${have_telepathy}
+    Telepathy Logger           : ${enable_telepathy}
 
 EOF
