@@ -79,16 +79,16 @@ dnl Optional dependencies
 dnl ==============================================
 
 AC_ARG_ENABLE([telepathy],
-	AS_HELP_STRING([--enable-telepathy[=@<:@no/auto/yes@:>@]],[Build with Telepathy support]),
+	AS_HELP_STRING([--enable-telepathy],[Build with Telepathy support]),
 	[enable_telepathy=$enableval],
-	[enable_telepathy="auto"])
+	[enable_telepathy="no"])
 
-if test "x$enable_telepathy" = "xauto" ; then
+if test "x$enable_telepathy" != "xno" ; then
 	PKG_CHECK_EXISTS([telepathy-glib >= $MIN_TP_GLIB_VERSION], \
 			  enable_telepathy="yes", enable_telepathy="no")
 fi
 
-if test "x$enable_telepathy" = "xyes" ; then
+if test "x$enable_telepathy" != "xno" ; then
 	PKG_CHECK_MODULES(TELEPATHY_GLIB, [telepathy-glib >= $MIN_TP_GLIB_VERSION])
 	DATAHUB_MODULES_CFLAGS="$DATAHUB_MODULES_CFLAGS $TELEPATHY_GLIB_CFLAGS"
 	DATAHUB_MODULES_LIBS="$DATAHUB_MODULES_LIBS $TELEPATHY_GLIB_LIBS"
