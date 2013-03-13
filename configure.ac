@@ -79,8 +79,8 @@ dnl Optional dependencies
 dnl ==============================================
 AC_ARG_ENABLE([telepathy],
               AS_HELP_STRING([--disable-telepathy],
-                             [disable Telepathy [[default=auto]]]),,
-              [enable_telepathy=auto])
+            [disable Telepathy [[default=auto]]]),[enable_telepathy=no])
+
 
 if test "x$enable_telepathy" != "xno"; then
    PKG_CHECK_MODULES(TELEPATHY_GLIB,
