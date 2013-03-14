@@ -79,22 +79,29 @@ dnl Optional dependencies
 dnl ==============================================
 
 AC_ARG_ENABLE([telepathy],
-	AS_HELP_STRING([--enable-telepathy],[Build with Telepathy support]),
-	[enable_telepathy=$enableval],
-	[enable_telepathy="no"])
+    AS_HELP_STRING([--disable-telepathy],
+        [Disables the Telepathy]
+    ),
+    [
+        if test "x$enableval" != "xno"; then
+            with_telepathy=yes
+        else
+            with_telepathy=no
+        fi
+    ],
+    [with_telepathy=yes])
 
-if test "x$enable_telepathy" != "xno" ; then
-	PKG_CHECK_EXISTS([telepathy-glib >= $MIN_TP_GLIB_VERSION], \
-			  enable_telepathy="yes", enable_telepathy="no")
+AM_CONDITIONAL(ENABLE_TELEPATHY, test "x$with_telepathy" = "xyes")
+
+if test "x$with_telepathy" = "xyes"; then
+    AC_DEFINE([ENABLE_TELEPATHY], [1], [Is the Telepathy enabled?])
+    PKG_CHECK_MODULES(TELEPATHY_GLIB, [telepathy-glib >= $MIN_TP_GLIB_VERSION])
+    DATAHUB_MODULES_CFLAGS="$DATAHUB_MODULES_CFLAGS $TELEPATHY_GLIB_CFLAGS"
+    DATAHUB_MODULES_LIBS="$DATAHUB_MODULES_LIBS $TELEPATHY_GLIB_LIBS"
+else
+    AC_DEFINE([ENABLE_TELEPATHY], [0], [Is the Telepathy enabled?])
 fi
 
-if test "x$enable_telepathy" != "xno" ; then
-	PKG_CHECK_MODULES(TELEPATHY_GLIB, [telepathy-glib >= $MIN_TP_GLIB_VERSION])
-	DATAHUB_MODULES_CFLAGS="$DATAHUB_MODULES_CFLAGS $TELEPATHY_GLIB_CFLAGS"
-	DATAHUB_MODULES_LIBS="$DATAHUB_MODULES_LIBS $TELEPATHY_GLIB_LIBS"
-fi
-
-AM_CONDITIONAL(ENABLE_TELEPATHY, test x"$enable_telepathy" = "xyes")
 
 dnl Expansions
 dnl AS_AC_EXPAND([PKGDATADIR], [$datadir/$PACKAGE_NAME])
@@ -122,6 +129,6 @@ ${PACKAGE}-${VERSION}
 
   Optional Providers
     Downloads Directory Monitor: ${with_downloads_monitor}
-    Telepathy Logger           : ${enable_telepathy}
+    Telepathy Logger           : ${with_telepathy}
 
 EOF
