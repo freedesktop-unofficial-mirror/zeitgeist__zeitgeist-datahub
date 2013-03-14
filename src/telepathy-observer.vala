@@ -90,12 +90,12 @@ public class TelepathyObserver : DataProvider
   {
     var target = channel.get_target_contact ();
     var obj_path = account.get_object_path ();
-    obj_path = this.tp_account_path.printf(obj_path[
+    obj_path = tp_account_path.printf(obj_path[
       TelepathyGLib.ACCOUNT_OBJECT_PATH_BASE.length : obj_path.length]);
     Event event_template = new Event.full (
                               ZG.ACCESS_EVENT,
                               "",
-                              this.actor,
+                              actor,
                               null,
                               obj_path);
 
@@ -116,7 +116,7 @@ public class TelepathyObserver : DataProvider
         NMO.IMMESSAGE,
         NFO.SOFTWARE_SERVICE,
         "plain/text",
-        this.tp_identifier.printf (target.get_identifier ()),
+        tp_identifier.printf (target.get_identifier ()),
         "",
         "net")
       );
@@ -126,7 +126,7 @@ public class TelepathyObserver : DataProvider
      */
     event_template.add_subject (
       new Subject.full (
-        this.tp_identifier.printf (target.get_identifier ()),
+        tp_identifier.printf (target.get_identifier ()),
         NCO.CONTACT,
         NCO.CONTACT_LIST_DATA_OBJECT,
         "",
@@ -211,12 +211,12 @@ public class TelepathyObserver : DataProvider
     weak TelepathyGLib.Contact? target = targets.get_keys ().data;
 
     var obj_path = account.get_object_path ();
-    obj_path = this.tp_account_path.printf(obj_path[
+    obj_path = tp_account_path.printf(obj_path[
       TelepathyGLib.ACCOUNT_OBJECT_PATH_BASE.length : obj_path.length]);
     Event event_template = new Event.full (
                               ZG.ACCESS_EVENT,
                               ZG.USER_ACTIVITY,
-                              this.actor,
+                              actor,
                               null,
                               obj_path);
     if (!channel.requested)
@@ -230,7 +230,7 @@ public class TelepathyObserver : DataProvider
         NFO.AUDIO,
         NFO.MEDIA_STREAM,
         "x-telepathy/call",
-        this.tp_identifier.printf (target.get_identifier ()),
+        tp_identifier.printf (target.get_identifier ()),
         target.get_alias (),
         "net")
     );
@@ -239,7 +239,7 @@ public class TelepathyObserver : DataProvider
      */
     event_template.add_subject (
       new Subject.full (
-        this.tp_identifier.printf(target.get_identifier ()),
+        tp_identifier.printf(target.get_identifier ()),
         NCO.CONTACT,
         NCO.CONTACT_LIST_DATA_OBJECT,
         "",
@@ -365,7 +365,7 @@ public class TelepathyObserver : DataProvider
           return;
         }
         var obj_path = account.get_object_path ();
-        obj_path = this.tp_account_path.printf("%s",
+        obj_path = tp_account_path.printf("%s",
                    obj_path [TelepathyGLib.ACCOUNT_OBJECT_PATH_BASE.length:
                    obj_path.length]);
         /* Create Event template */
@@ -380,7 +380,7 @@ public class TelepathyObserver : DataProvider
           event_template.interpretation = ZG.RECEIVE_EVENT;
           event_template.manifestation = ZG.WORLD_ACTIVITY;
         }
-        event_template.actor = this.actor;
+        event_template.actor = actor;
         /*
          * Create Subject representing the sent/received file
          */
@@ -397,14 +397,14 @@ public class TelepathyObserver : DataProvider
           subj.origin = uri;
         }
         else
-          subj.origin = this.tp_identifier.printf (target.get_identifier ());
+          subj.origin = tp_identifier.printf (target.get_identifier ());
         event_template.add_subject (subj);
 
         /*
          * Create Subject representing contact received from or sent to
          */
         event_template.add_subject (
-          new Subject.full (this.tp_identifier.printf(target.get_identifier ()),
+          new Subject.full (tp_identifier.printf(target.get_identifier ()),
             NCO.CONTACT,
             NCO.CONTACT_LIST_DATA_OBJECT,
             "",

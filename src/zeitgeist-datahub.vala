@@ -87,7 +87,7 @@ public class DataHub : Object, DataHubService
     }
   }
 
-  private async void start_data_providers ()
+  private async void start_data_providers () throws Error
   {
     try
     {
@@ -216,7 +216,7 @@ public class DataHub : Object, DataHubService
   const string UNIQUE_NAME = "org.gnome.zeitgeist.datahub";
   const string OBJECT_PATH = "/org/gnome/zeitgeist/datahub";
 
-  protected void run ()
+  protected void run () throws Error
   {
     Bus.own_name (BusType.SESSION, UNIQUE_NAME, BusNameOwnerFlags.NONE,
       (conn) => { conn.register_object (OBJECT_PATH, (DataHubService) this); },
@@ -280,7 +280,11 @@ public class DataHub : Object, DataHubService
   {
     Environment.set_prgname ("zeitgeist-datahub");
     var hub = new DataHub ();
-    hub.run ();
+    try {
+        hub.run ();
+    } catch (Error err) {
+        stdout.printf("Error running Zeitgeist Datahub %s".printf(err.message));
+    }
 
     return hub.return_code;
   }
